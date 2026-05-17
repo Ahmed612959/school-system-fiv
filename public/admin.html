@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>لوحة تحكم الأدمن - معهد رعاية الضبعية</title>
+    <link rel="stylesheet" href="admin.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7676282531413677"
+     crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  
+</head>
+<body>
+
+<div class="class-buttons-bar">
+  <a href="class-first.html" class="class-btn">
+    <i class="fas fa-users-cog"></i>
+    👥 لوحة تحكم مستخدمين الموقع
+  </a>
+</div>
+
+
+<!-- الخلفية الداكنة -->
+<div class="overlay" id="overlay"></div>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار معهد رعاية الضبعية" class="logo">
+        <h1>لوحة تحكم الأدمن</h1>
+        <div class="header-buttons">
+            <button class="home-btn" onclick="window.location.href='Home.html'"><i class="fas fa-home"></i> الصفحة الرئيسية</button>
+            <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-welcome-message"></div>
+        
+        <h2>إدارة المستخدمين</h2>
+        <div class="manage-users-section">
+            <h3>إضافة أدمن جديد</h3>
+            <form id="add-user-form">
+                <div class="input-group">
+                    <label for="admin-name">الاسم الكامل</label>
+                    <input type="text" id="admin-name" name="admin-name" placeholder="أدخل الاسم الكامل">
+                </div>
+                <div class="input-group">
+                    <label for="admin-username">اسم المستخدم</label>
+                    <input type="text" id="admin-username" name="admin-username" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label for="admin-password">كلمة المرور</label>
+                    <input type="password" id="admin-password" name="admin-password" placeholder="أدخل كلمة المرور">
+                </div>
+                <button type="submit" class="submit-btn">إضافة أدمن</button>
+            </form>
+
+            <h3>قائمة الأدمنز</h3>
+            <div class="users-table">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم الكامل</th>
+                                <th>اسم المستخدم</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+    <h2>رفع وتحليل نتائج من ملف (PDF أو صورة)</h2>
+    <p>1. اختر ملف PDF يحتوي على بيانات الطلاب (تنسيق: طالب: [اسم] - رقم الجلوس: [رقم], [مادة]: [درجة]).</p>
+    <input type="file" id="pdf-upload" accept=".pdf">
+    <button id="analyze-pdf" class="submit-btn">تحليل PDF</button>
+    <div id="results-display" class="results-table"></div>
+</div>
+
+ <!-- 3. رفع نتايج شهرية (الجديد المطور) -->
+    <h2>نتايج الاختبارات الشهرية</h2>
+    <div class="monthly-results-section">
+        <h3>رفع نتيجة شهرية (PDF أو صورة)</h3>
+        <p>ارفع الملف اللي فيه نتايج الاختبار الشهري</p>
+        
+        <input type="file" id="monthly-upload" accept=".pdf,image/*">
+        
+        <!-- الحقل الجديد: اسم الشهر -->
+        <div class="input-group">
+            <label for="monthly-month">اسم الشهر (مثال: يناير 2025)</label>
+            <input type="text" id="monthly-month" placeholder="يناير 2025" required>
+        </div>
+        
+        <button id="analyze-monthly" class="submit-btn">تحليل وإضافة النتايج</button>
+        
+        <div id="monthly-results-display" class="results-table"></div>
+    </div>
+
+
+<button class="submit-btn" onclick="window.location.href='admin-first-year-grades.html'"><i class="fas fa-chart-bar"></i> تحليل نتائج السنة الأولى</button>
+
+        <div class="excel-upload-section" style="margin:30px 0;">
+  <label style="display:block; margin-bottom:10px; font-weight:bold;">رفع ملف نتائج (Excel):</label>
+  <input type="file" id="excel-upload" accept=".xls,.xlsx" 
+         style="padding:10px; border-radius:10px;"/>
+  <button id="analyze-excel" 
+          style="background:#395886; color:#fff; border:none; border-radius:8px; padding:10px 25px; margin-right:10px; cursor:pointer; font-size:18px; font-family:'Tajawal', Arial;">
+    تحليل ملف Excel
+  </button>
+</div>
+<div id="excel-results-display" style="margin-top:15px;"></div>
+        
+        
+        <h2>إضافة نتيجة طالب يدويًا</h2>
+<div class="add-result-section">
+    <form id="add-result-form">
+        <div class="input-group">
+            <label for="student-name">اسم الطالب</label>
+            <input type="text" id="student-name" name="student-name" placeholder="أدخل اسم الطالب">
+        </div>
+        <div class="input-group">
+            <label for="student-id">رقم الجلوس</label>
+            <input type="text" id="student-id" name="student-id" placeholder="أدخل رقم الجلوس">
+        </div>
+        <div class="input-group">
+            <label for="semester">الترم</label>
+            <select id="semester" name="semester" onchange="toggleSubjects()">
+                <option value="first">الترم الأول</option>
+                <option value="second">الترم الثاني</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="subject1">مبادئ وأسس تمريض</label>
+            <input type="number" id="subject1" name="subject1" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject2">اللغة العربية</label>
+            <input type="number" id="subject2" name="subject2" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject3">اللغة الإنجليزية</label>
+            <input type="number" id="subject3" name="subject3" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject4">الفيزياء</label>
+            <input type="number" id="subject4" name="subject4" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject5">الكيمياء</label>
+            <input type="number" id="subject5" name="subject5" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject6">التشريح / علم وظائف الأعضاء</label>
+            <input type="number" id="subject6" name="subject6" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject7">التربية الدينية</label>
+            <input type="number" id="subject7" name="subject7" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group">
+            <label for="subject8">الكمبيوتر</label>
+            <input type="number" id="subject8" name="subject8" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group" id="history-group">
+            <label for="subject9">التاريخ</label>
+            <input type="number" id="subject9" name="subject9" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <div class="input-group" id="geography-group" style="display: none;">
+            <label for="subject10">الجغرافيا</label>
+            <input type="number" id="subject10" name="subject10" min="0" max="100" placeholder="أدخل الدرجة">
+        </div>
+        <button type="submit" class="submit-btn">إضافة النتيجة</button>
+    </form>
+</div>
+
+<button id="delete-all-results" style="background:#c82333; color:#fff; border:none; border-radius:8px; padding:10px 25px; margin-bottom:16px; cursor:pointer; font-size:18px;">
+  🗑️ مسح جميع النتائج
+</button>
+        
+        
+        <h2>قائمة النتايج</h2>
+        <div class="filter-section" style="text-align: center; margin-bottom: 15px;">
+            <label for="filter-select">عرض النتائج:</label>
+            <select id="filter-select" class="search-bar" style="width:auto;">
+                <option value="all">الكل</option>
+                <option value="passed">الناجحين فقط</option>
+                <option value="failed">الراسبين فقط</option>
+            </select>
+        </div>
+        
+        <div class="search-section">
+            <input type="text" id="search-input" class="search-bar" placeholder="ابحث باسم الطالب أو رقم الجلوس">
+        </div>
+        <div class="results-table">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>البيانات</th>
+                            <th>القيم</th>
+                            <th>المجموع</th>
+                            <th>النسبة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <button id="export-excel" class="submit-btn">تصدير النتائج إلى Excel</button>
+        <section class="violations-section">
+    <h2>إدارة الإنذارات والمخالفات</h2>
+    <form id="add-violation-form">
+        <div class="input-group">
+            <label for="violation-student-id">رقم الجلوس</label>
+            <input type="text" id="violation-student-id" required>
+        </div>
+        <div class="input-group">
+            <label for="violation-type">النوع</label>
+            <select id="violation-type" required>
+                <option value="warning">إنذار</option>
+                <option value="violation">مخالفة</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="violation-reason">السبب</label>
+            <textarea id="violation-reason" required></textarea>
+        </div>
+        <div class="input-group">
+            <label for="violation-penalty">العقوبة</label>
+            <input type="text" id="violation-penalty" required>
+        </div>
+        <div class="input-group">
+            <label for="parent-summons">
+                <input type="checkbox" id="parent-summons"> استدعاء ولي الأمر
+            </label>
+        </div>
+        <div class="input-group">
+    <label for="parent-phone">رقم ولي الأمر (واتساب - اختياري)</label>
+    <input type="tel" id="parent-phone" placeholder="مثال: 01012345678 أو 201012345678">
+    <small style="color: #666;">إذا تركته فارغاً، سيتم استخدام رقم ولي الأمر المسجل في ملف الطالب</small>
+</div>
+        <button type="submit" class="submit-btn">إضافة إنذار/مخالفة</button>
+    </form>
+
+    <h3>قائمة الإنذارات والمخالفات</h3>
+    <div class="violations-table">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الجلوس</th>
+                        <th>النوع</th>
+                        <th>السبب</th>
+                        <th>العقوبة</th>
+                        <th>استدعاء ولي الأمر</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="violations-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+        <h2>إحصائيات</h2>
+        <div class="stats-section" id="stats-section"></div>
+
+
+
+
+
+       <!-- قسم إنشاء الاختبارات الإلكترونية -->
+<section class="exams-section">
+    <h2>إنشاء اختبار إلكتروني</h2>
+    <div class="exam-form-container">
+        <div class="input-group">
+            <label for="exam-name">اسم الاختبار <span class="required">*</span></label>
+            <input type="text" id="exam-name" placeholder="أدخل اسم الاختبار" required>
+        </div>
+        <div class="input-group">
+            <label for="exam-code">كود الاختبار <span class="required">*</span></label>
+            <input type="text" id="exam-code" placeholder="أدخل كود الاختبار (مثل EXAM123)" required>
+            <span id="code-availability" style="display: none;"></span>
+        </div>
+        <div class="input-group">
+            <label for="exam-stage">المرحلة</label>
+            <select id="exam-stage">
+                <option value="first">الأولى ثانوي</option>
+                <option value="second">الثانية ثانوي</option>
+            </select>
+        </div>
+        <div class="input-group">
+    <label for="exam-duration">مدة الاختبار (بالدقائق) <span class="required">*</span></label>
+    <input type="number" id="exam-duration" min="1" placeholder="أدخل مدة الاختبار (مثال: 30)" required>
+</div>
+        <div class="question-form">
+            <h3>إضافة سؤال</h3>
+            <div class="input-group">
+                <label for="question-type">نوع السؤال</label>
+                <select id="question-type">
+                    <option value="multiple">اختياري</option>
+                    <option value="essay">مقالي</option>
+                    <option value="list">قائمة</option>
+                    <option value="truefalse">صح/خطأ</option>
+                </select>
+            </div>
+            <div id="question-inputs"></div>
+            <button id="add-question" class="submit-btn">إضافة السؤال</button>
+        </div>
+        <div id="questions-list"></div>
+        <button id="save-exam" class="submit-btn">حفظ الاختبار</button>
+    </div>
+</section>
+        <div class="test-results-section">
+    <h2>نتائج الاختبارات</h2>
+    <div class="input-group">
+        <label for="results-exam-code">كود الاختبار</label>
+        <input type="text" id="results-exam-code" placeholder="أدخل كود الاختبار">
+    </div>
+    <button id="fetch-results" class="submit-btn">عرض النتائج</button>
+    <div id="exam-results-list" class="test-results-table"></div>
+</div>
+        <!-- إضافة هذا القسم بعد <div id="stats-section" class="stats-section"></div> -->
+<div class="notifications-section">
+    <h2>إدارة الإشعارات</h2>
+    <div class="input-group">
+        <label for="notification-text">نص الإشعار</label>
+        <textarea id="notification-text" rows="4" placeholder="أدخل نص الإشعار"></textarea>
+    </div>
+    <button class="submit-btn" onclick="addNotification()">إضافة إشعار</button>
+    <div id="notifications-list" class="notifications-list">
+        <h3>قائمة الإشعارات</h3>
+        <div id="notifications-table" class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>نص الإشعار</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="notifications-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    </div>
+
+    <nav class="nav-bar" id="nav-bar"></nav>
+
+    <button class="scroll-btn scroll-up" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
+    <button class="scroll-btn scroll-down" onclick="scrollToBottom()"><i class="fas fa-arrow-down"></i></button>
+
+
+
+    
+    <!-- أضف هذين السطرين فقط -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="admin.js"></script>
+    <script src="auth.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'947cc960f9459a73',t:'MTc0ODU5Mjk1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+// فتح وإغلاق القايمة
+document.getElementById('hamburgerBtn').onclick = function() {
+    document.getElementById('adminSidebar').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('active');
+};
+
+document.getElementById('overlay').onclick = function() {
+    document.getElementById('adminSidebar').classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
+};
+
+// إغلاق تلقائي على الموبايل
+document.querySelectorAll('.sidebar-menu a').forEach(a => {
+    a.onclick = () => {
+        if (window.innerWidth <= 768) {
+            document.getElementById('adminSidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+    };
+});
+
+      <script>
+  const btn = document.getElementById('admin-menu-btn');
+  const sidebar = document.getElementById('sidebar-links');
+  btn.onclick = function() {
+    sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
+  };
+  // إغلق القائمة عند الضغط في أي مكان خارجها
+  document.addEventListener('click', e=>{
+    if (!btn.contains(e.target) && !sidebar.contains(e.target)) sidebar.style.display='none';
+  });
+</script>
+</body>
+</html>

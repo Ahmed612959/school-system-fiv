@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الملف الشخصي - SchoolX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        :root { --g: #d4af37; --d: #1a2526; --d2: #2a3a3b; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0f1419;
+            color: #fff;
+            min-height: 100vh;
+            padding-bottom: 72px;
+            font-size: 12.8px;
+            line-height: 1.4;
+        }
+        .c { padding: 7px; }
+        header { text-align: center; padding: 10px 0; }
+        .logo { width: 42px; height: 42px; border: 2.5px solid var(--g); border-radius: 50%; padding: 3px; background: #fff; }
+        h1 { color: var(--g); font-size: 1.12rem; margin-top: 5px; }
+
+        .card {
+            background: #fff; color: #111; border-radius: 14px; overflow: hidden;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.5); margin: 7px 0;
+        }
+        .ch {
+            background: linear-gradient(135deg, var(--g), #b8972e);
+            padding: 11px 8px; text-align: center; color: #fff;
+        }
+        .ch h2 { font-size: 1.08rem; margin: 3px 0; }
+        #admin-badge { font-size: 1.3rem; }
+
+        .p { padding: 10px; text-align: center; background: #fafafa; }
+        .p label { font-size: 0.74rem; font-weight: bold; color: #333; margin-bottom: 4px; }
+        progress { width: 100%; height: 6px; border-radius: 3px; }
+        progress::-webkit-progress-value { background: var(--g); border-radius: 3px; }
+        #progress-percentage { margin-top: 4px; font-size: 0.98rem; color: var(--g); font-weight: bold; }
+
+        .f { padding: 11px 9px; }
+        .ig { margin-bottom: 9px; }
+        .ig label { font-size: 0.73rem; color: #333; margin-bottom: 3px; font-weight: 600; }
+        .ig input {
+            width: 100%; padding: 7px 9px; border: 1.8px solid var(--g);
+            border-radius: 8px; font-size: 0.81rem; background: #fdfdfd;
+        }
+        .ig input:focus { outline: none; border-color: var(--d); background: #fff; }
+        .ig input[disabled] { background: #f0f0f0; color: #777; }
+
+        .btn {
+            width: 100%; padding: 9px; background: var(--g); color: var(--d);
+            border: none; border-radius: 9px; font-size: 0.88rem; font-weight: bold;
+            cursor: pointer; margin-top: 5px;
+        }
+        .btn:hover { background: #b8972e; }
+
+        .nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(180deg, var(--d), var(--d2));
+            padding: 12px 20px 22px; display: flex; justify-content: space-around;
+            align-items: center; border-top-left-radius: 24px; border-top-right-radius: 24px;
+            border-top: 3px solid var(--g); box-shadow: 0 -8px 30px rgba(0,0,0,0.8); z-index: 9999;
+        }
+        .nav a {
+            color: var(--g); font-size: 1.45rem; padding: 10px 14px;
+            background: rgba(255,255,255,0.05); border-radius: 50%;
+            transition: all .4s ease; position: relative; backdrop-filter: blur(10px);
+        }
+        .nav a.active {
+            color: #fff; background: var(--g); transform: translateY(-12px) scale(1.15);
+            box-shadow: 0 8px 25px rgba(212,175,55,0.6);
+        }
+        .nav a.active::after {
+            content: ''; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+            width: 7px; height: 7px; background: var(--g); border-radius: 50%; box-shadow: 0 0 20px var(--g);
+        }
+    </style>
+</head>
+<body>
+
+<div class="c">
+    <header>
+        <img src="logo.png" alt="شعار المعهد" class="logo">
+        <h1>الملف الشخصي</h1>
+    </header>
+
+    <div class="card">
+        <div class="ch">
+            <h2 id="user-name">جاري التحميل...</h2>
+            <span id="admin-badge" style="display:none;">👑</span>
+        </div>
+
+        <div class="p">
+            <label>نسبة اكتمال الملف</label>
+            <progress id="profile-progress" value="0" max="100"></progress>
+            <div id="progress-percentage">0%</div>
+        </div>
+
+        <div class="f">
+            <form id="profile-form">
+                <div class="ig"><label>الاسم الكامل</label><input type="text" id="full-name" disabled></div>
+                <div class="ig"><label>اسم المستخدم</label><input type="text" id="username" disabled></div>
+                <div class="ig"><label>رقم الهاتف</label><input type="tel" id="phone"></div>
+                <div class="ig"><label>اسم ولي الأمر</label><input type="text" id="parentName"></div>
+                <div class="ig"><label>رقم بطاقة ولي الأمر</label><input type="text" id="parentId"></div>
+                <button type="submit" class="btn">حفظ التغييرات</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // جلب البيانات من localStorage فقط (بدون fetch من السيرفر حاليًا)
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+
+    if (!loggedInUser || !loggedInUser.username) {
+        Toastify({
+            text: "يرجى تسجيل الدخول أولاً!",
+            style: { background: "#dc3545" },
+            duration: 4000
+        }).showToast();
+        setTimeout(() => window.location.href = 'login.html', 2000);
+        return;
+    }
+
+    // عرض البيانات الأساسية من localStorage
+    document.getElementById('user-name').textContent = loggedInUser.fullName || loggedInUser.username;
+    document.getElementById('full-name').value = loggedInUser.fullName || '';
+    document.getElementById('username').value = loggedInUser.username;
+
+    // عرض البيانات الإضافية (اللي ممكن الطالب عدّلها قبل كده)
+    document.getElementById('phone').value = savedProfile.phone || '';
+    document.getElementById('parentName').value = savedProfile.parentName || '';
+    document.getElementById('parentId').value = savedProfile.parentId || '';
+
+    // حساب نسبة الاكتمال (3 حقول فقط)
+    const fields = [savedProfile.phone, savedProfile.parentName, savedProfile.parentId];
+    const completed = fields.filter(f => f && f.trim() !== '').length;
+    const percentage = Math.round((completed / 3) * 100);
+    document.getElementById('profile-progress').value = percentage;
+    document.getElementById('progress-percentage').textContent = percentage + '%';
+
+    // لو أدمن، يظهر البادج
+    if (loggedInUser.type === 'admin') {
+        document.getElementById('admin-badge').style.display = 'inline-block';
+    }
+
+    // رسالة ترحيب
+    Toastify({
+        text: `أهلاً يا ${loggedInUser.fullName?.split(' ')[0] || loggedInUser.username}!`,
+        style: { background: "#d4af37" },
+        duration: 4000
+    }).showToast();
+
+    // حفظ التعديلات في localStorage فقط (مؤقت لحد ما نحل السيرفر)
+    document.getElementById('profile-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const updatedProfile = {
+            phone: document.getElementById('phone').value.trim(),
+            parentName: document.getElementById('parentName').value.trim(),
+            parentId: document.getElementById('parentId').value.trim()
+        };
+
+        // حفظ في localStorage
+        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+
+        // إعادة حساب النسبة بعد التعديل
+        const newFields = [updatedProfile.phone, updatedProfile.parentName, updatedProfile.parentId];
+        const newCompleted = newFields.filter(f => f.trim() !== '').length;
+        const newPercentage = Math.round((newCompleted / 3) * 100);
+        document.getElementById('profile-progress').value = newPercentage;
+        document.getElementById('progress-percentage').textContent = newPercentage + '%';
+
+        Toastify({
+            text: newPercentage === 100 ? "مبروك! ملفك مكتمل 100%" : "تم الحفظ بنجاح!",
+            style: { background: "#28a745" },
+            duration: 4000
+        }).showToast();
+    });
+
+    
+
+    if (loggedInUser.type === 'admin') {
+        navItems.push({ href: 'admin.html', icon: 'fa-solid fa-cogs' });
+    }
+
+    document.querySelector('.nav').innerHTML = navItems.map(item => 
+        `<a href="\( {item.href}" class=" \){item.active ? 'active' : ''}"><i class="${item.icon}"></i></a>`
+    ).join('');
+});
+</script>
+
+</body>
+</html>

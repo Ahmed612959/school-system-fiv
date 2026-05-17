@@ -1,0 +1,580 @@
+@font-face {
+    font-family: 'Cairo';
+    src: url('Cairo-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Cairo';
+    src: url('Cairo-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(135deg, #1a2526, #2f3b3c);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+.main-header {
+    background: #1a2526;
+    color: #d4af37;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* نفس الكود السابق مع إضافة تنسيق الـ logout-btn */
+.logout-btn {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-left: 8px;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.logout-btn:hover {
+    background: #c82333;
+}
+
+/* باقي الكود زي ما هو */
+.logo {
+    width: 12%;
+    max-width: 90px;
+    min-width: 50px;
+    margin-bottom: 8px;
+    border: 2px solid #d4af37;
+    border-radius: 50%;
+    padding: 4px;
+    object-fit: contain;
+}
+
+.main-header h1 {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.main-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+
+.result-form-container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 1400px;
+    border: 1px solid #d4af37;
+}
+.welcome-message {
+    color: #d4af37;
+    background: #1a2526;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.result-form-container h2 {
+    color: #1a2526;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.result-form-container h3 {
+    color: #1a2526;
+    font-size: 0.95em;
+    margin-bottom: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.95em;
+    color: #1a2526;
+    margin-bottom: 4px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #d4af37;
+    border-radius: 5px;
+    font-size: 0.95em;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #1a2526;
+    box-shadow: 0 0 5px rgba(26, 37, 38, 0.3);
+}
+
+.submit-btn {
+    background: #d4af37;
+    color: #1a2526;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    font-size: 0.95em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+}
+
+.submit-btn:hover {
+    background: #1a2526;
+    color: #d4af37;
+}
+
+.result-table {
+    margin-top: 15px;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: linear-gradient(180deg, #f9f9f9, #ffffff);
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #d4af37;
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+th {
+    background: linear-gradient(90deg, #1a2526, #2f3b3c);
+    color: #d4af37;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+td {
+    color: #1a2526;
+    background: #fff;
+    transition: background 0.3s ease;
+}
+
+tr:hover td {
+    background: #f0f0f0;
+}
+
+th:nth-child(1), td:nth-child(1) { /* البيانات */
+    width: 40%;
+    min-width: 160px;
+}
+
+th:nth-child(2), td:nth-child(2) { /* القيم */
+    width: 30%;
+    min-width: 120px;
+}
+
+th:nth-child(3), td:nth-child(3) { /* المجموع */
+    width: 15%;
+    min-width: 60px;
+}
+
+th:nth-child(4), td:nth-child(4) { /* النسبة */
+    width: 15%;
+    min-width: 60px;
+}
+
+.table-separator {
+    border: none;
+    border-top: 1px solid #d4af37;
+    margin: 8px 0;
+    width: 80%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.nav-bar {
+    background: #1a2526;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.nav-bar a {
+    color: #d4af37;
+    text-decoration: none;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+
+.nav-bar a:hover {
+    color: #fff;
+}
+
+footer {
+    background: #1a2526;
+    color: #d4af37;
+    text-align: center;
+    padding: 8px;
+}
+
+footer p {
+    font-size: 0.95em;
+    font-weight: normal;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 1200px) {
+    .result-form-container {
+        max-width: 1100px;
+    }
+    th, td {
+        font-size: 12px;
+        padding: 10px;
+    }
+    th:nth-child(1), td:nth-child(1) { width: 35%; min-width: 140px; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; min-width: 110px; }
+    th:nth-child(3), td:nth-child(3) { width: 20%; min-width: 50px; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; min-width: 50px; }
+}
+
+@media (max-width: 768px) {
+    .logo {
+        width: 18%;
+        max-width: 70px;
+        min-width: 45px;
+    }
+    .main-header h1 {
+        font-size: 1.1em;
+    }
+    .result-form-container {
+        padding: 12px;
+        max-width: 100%;
+    }
+    .input-group input {
+        font-size: 0.9em;
+    }
+    .submit-btn {
+        font-size: 0.9em;
+        padding: 8px 12px;
+    }
+    th, td {
+        font-size: 10px;
+        padding: 8px;
+    }
+    th:nth-child(1), td:nth-child(1) { width: 35%; min-width: 120px; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; min-width: 100px; }
+    th:nth-child(3), td:nth-child(3) { width: 20%; min-width: 50px; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; min-width: 50px; }
+    .nav-bar a {
+        font-size: 0.95em;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        width: 22%;
+        max-width: 60px;
+        min-width: 40px;
+    }
+    .main-header h1 {
+        font-size: 0.95em;
+    }
+    .result-form-container {
+        padding: 10px;
+    }
+    .input-group input {
+        font-size: 0.85em;
+    }
+    .submit-btn {
+        font-size: 0.85em;
+        padding: 7px 10px;
+    }
+    th, td {
+        font-size: 9px;
+        padding: 6px;
+    }
+    th:nth-child(1), td:nth-child(1) { width: 35%; min-width: 100px; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; min-width: 80px; }
+    th:nth-child(3), td:nth-child(3) { width: 20%; min-width: 40px; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; min-width: 40px; }
+    .nav-bar a {
+        font-size: 0.9em;
+    }
+}
+/* إضافة في نهاية الملف */
+.notifications-section {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.notifications-list {
+    margin-top: 15px;
+}
+
+.notifications-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.notifications-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: linear-gradient(180deg, #f9f9f9, #ffffff);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.notifications-table th,
+.notifications-table td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #d4af37;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.notifications-table th {
+    background: linear-gradient(90deg, #1a2526, #2f3b3c);
+    color: #d4af37;
+    font-weight: bold;
+}
+
+.notifications-table td {
+    color: #1a2526;
+}
+.student-dashboard {
+    background: var(--container-bg);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    border: 1px solid var(--border-color);
+    max-width: 800px;
+}
+
+.student-dashboard h2 {
+    font-size: 1.5em;
+    color: var(--text-color);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.dashboard-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.stats {
+    flex: 1;
+    min-width: 200px;
+}
+
+.stats p {
+    font-size: 1em;
+    color: var(--text-color);
+    margin: 10px 0;
+}
+
+.chart-container {
+    flex: 2;
+    min-width: 300px;
+    max-width: 600px; /* زيادة العرض لاستيعاب التسميات المائلة */
+    margin: 0 auto;
+}
+
+canvas#gradesChart {
+    max-height: 350px; /* زيادة الارتفاع قليلاً */
+}
+.violations-section {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.violations-section h3 {
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    color: #1a2526;
+    font-weight: bold;
+}
+
+.violations-table {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+.violations-table table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    background: #f9f9f9;
+    border-radius: 6px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+
+.violations-table th,
+.violations-table td {
+    padding: 5px;
+    text-align: center;
+    border-bottom: 1px solid #d4af37;
+    font-size: 0.7em;
+    vertical-align: middle;
+}
+
+.violations-table th {
+    background: linear-gradient(90deg, #1a2526, #2f3b3c);
+    color: #d4af37;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.violations-table td {
+    color: #1a2526;
+    background: #fff;
+}
+
+.violations-table th:nth-child(1), .violations-table td:nth-child(1) { /* النوع */
+    width: 15%;
+    min-width: 40px;
+}
+
+.violations-table th:nth-child(2), .violations-table td:nth-child(2) { /* السبب */
+    width: 35%;
+    min-width: 80px;
+    white-space: normal; /* Allow text wrapping */
+    max-width: 150px; /* Limit max width */
+    word-wrap: break-word;
+}
+
+.violations-table th:nth-child(3), .violations-table td:nth-child(3) { /* العقوبة */
+    width: 30%;
+    min-width: 70px;
+    white-space: normal; /* Allow text wrapping */
+    max-width: 150px; /* Limit max width */
+    word-wrap: break-word;
+}
+
+.violations-table th:nth-child(4), .violations-table td:nth-child(4) { /* استدعاء ولي الأمر */
+    width: 10%;
+    min-width: 30px;
+}
+
+.violations-table th:nth-child(5), .violations-table td:nth-child(5) { /* تاريخ الإضافة */
+    width: 20%;
+    min-width: 50px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .violations-table th,
+    .violations-table td {
+        font-size: 0.65em;
+        padding: 4px;
+    }
+    .violations-table th:nth-child(1), .violations-table td:nth-child(1) { min-width: 35px; }
+    .violations-table th:nth-child(2), .violations-table td:nth-child(2) { min-width: 70px; }
+    .violations-table th:nth-child(3), .violations-table td:nth-child(3) { min-width: 60px; }
+    .violations-table th:nth-child(4), .violations-table td:nth-child(4) { min-width: 25px; }
+    .violations-table th:nth-child(5), .violations-table td:nth-child(5) { min-width: 45px; }
+}
+
+@media (max-width: 768px) {
+    .violations-section h3 {
+        font-size: 0.8em;
+    }
+    .violations-table th,
+    .violations-table td {
+        font-size: 0.6em;
+        padding: 3px;
+    }
+    .violations-table th:nth-child(1), .violations-table td:nth-child(1) { min-width: 30px; }
+    .violations-table th:nth-child(2), .violations-table td:nth-child(2) { min-width: 60px; }
+    .violations-table th:nth-child(3), .violations-table td:nth-child(3) { min-width: 50px; }
+    .violations-table th:nth-child(4), .violations-table td:nth-child(4) { min-width: 20px; }
+    .violations-table th:nth-child(5), .violations-table td:nth-child(5) { min-width: 40px; }
+}
+
+@media (max-width: 480px) {
+    .violations-section h3 {
+        font-size: 0.75em;
+    }
+    .violations-table {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .violations-table table {
+        min-width: 300px; /* Prevent collapsing too much */
+    }
+    .violations-table th,
+    .violations-table td {
+        font-size: 0.55em;
+        padding: 2px;
+    }
+    .violations-table th:nth-child(1), .violations-table td:nth-child(1) { min-width: 25px; }
+    .violations-table th:nth-child(2), .violations-table td:nth-child(2) { min-width: 50px; }
+    .violations-table th:nth-child(3), .violations-table td:nth-child(3) { min-width: 45px; }
+    .violations-table th:nth-child(4), .violations-table td:nth-child(4) { min-width: 15px; }
+    .violations-table th:nth-child(5), .violations-table td:nth-child(5) { min-width: 35px; }
+}

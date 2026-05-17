@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاختبارات الإلكترونية</title>
+    <link rel="stylesheet" href="exams.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+</head>
+<body>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار معهد رعاية الضبعية" class="logo">
+        <h1>الاختبارات الإلكترونية - معهد رعاية الضبعية</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </header>
+    <div class="main-container">
+        <div id="exam-access">
+            <h2>الوصول إلى الاختبار</h2>
+            <form id="exam-access-form">
+                <div class="input-group">
+                    <label for="exam-code">كود الاختبار <span class="required">*</span></label>
+                    <input type="text" id="exam-code" placeholder="أدخل كود الاختبار" required>
+                </div>
+                <button type="submit" class="submit-btn">بدء الاختبار</button>
+            </form>
+        </div>
+        <div id="exam-container" style="display: none;">
+            <h2 id="exam-title"></h2>
+            <div id="timer" style="text-align: center; font-size: 1.2em; color: #dc3545; margin-bottom: 20px;"></div>
+            <form id="exam-form"></form>
+            <button id="submit-exam" class="submit-btn">إرسال الإجابات</button>
+        </div>
+    </div>
+    <nav class="nav-bar" id="nav-bar"></nav>
+    <footer>
+        <p>Developed by Ahmed Moussa <span class="heart">❤</span></p>
+    </footer>
+    <script src="crypto-js.js"></script>
+    <script src="auth.js"></script>
+    <script src="exams.js"></script>
+</body>
+</html>

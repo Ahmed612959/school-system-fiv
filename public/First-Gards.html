@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتيجة الصف الاول الثانوي تمريض</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Tajawal',sans-serif;background:#eef2ff;color:#222}
+.header{text-align:center;padding:30px}
+.logo{width:100px;height:100px;border-radius:50%;overflow:hidden;margin:auto;border:4px solid #4a6cf7}
+.logo img{width:100%;height:100%;object-fit:cover}
+.header h1{margin-top:10px;font-size:26px;color:#2b3dbf}
+.container{max-width:700px;margin:auto;background:white;padding:30px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.search-box{text-align:center;margin-bottom:25px}
+.search-box input{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ddd;font-size:15px}
+.search-box button{margin-top:10px;padding:12px 35px;border:none;background:#4a6cf7;color:white;border-radius:8px;font-size:16px;cursor:pointer}
+.subject{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee}
+.subject-name{display:flex;align-items:center;gap:8px;font-weight:600}
+.grade{font-weight:bold;font-size:16px}
+.good{color:#1aa34a}
+.avg{color:#d8a300}
+.bad{color:#d12b2b}
+.total{background:#f6f7ff;padding:12px;margin-top:12px;border-radius:8px;font-weight:bold}
+.percent{margin-top:8px;font-size:20px;font-weight:bold}
+.rank{margin-top:5px;font-size:16px;font-weight:bold;color:#4a6cf7}
+.no-result{text-align:center;color:red;display:none;margin-top:15px}
+.share-btn{margin-top:12px;padding:10px 25px;background:#25D366;color:white;border:none;border-radius:8px;font-size:15px;cursor:pointer}
+.footer{text-align:center;margin-top:25px;font-size:13px;color:#777}
+</style>
+</head>
+
+<body>
+<div class="header">
+<div class="logo"><img src="logo.png"></div>
+<h1>نتيجة الصف الاول الثانوي تمريض</h1>
+</div>
+
+<div class="container">
+<div class="search-box">
+<input id="student-name" placeholder="الاسم">
+<input id="seat-number" placeholder="رقم الجلوس">
+<button onclick="searchResult()">عرض النتيجة</button>
+</div>
+
+<div id="result-container" style="display:none">
+<div class="student-header" id="student-info"></div>
+<div id="subjects-list"></div>
+<div class="total" id="total"></div>
+<div class="percent" id="percent"></div>
+<div class="rank" id="rank"></div>
+<button class="share-btn" id="share-btn" onclick="shareWhatsApp()">مشاركة على واتساب</button>
+</div>
+
+<p id="no-result" class="no-result">لا توجد نتيجة مطابقة</p>
+</div>
+
+<div class="footer">Developed by Ahmed Moussa ❤️</div>
+
+<script>
+const results=[
+{seat:"523",name:"احمد حسن جلال اسماعيل",subjects:{"اللغة العربية":"18.5 / 20","اللغة الإنجليزية":"9 / 20","العلوم التطبيقية":"35 / 40","التشريح":"13.5 / 20","مبادئ التمريض":"5.5 / 12","الحاسب":"11.5 / 12","الدين":"14 / 16"}},
+{seat:"524",name:"احمد سعدي عباس عبد الراضي",subjects:{"اللغة العربية":"18 / 20","اللغة الإنجليزية":"18 / 20","العلوم التطبيقية":"29.5 / 40","التشريح":"12.5 / 20","مبادئ التمريض":"10 / 12","الحاسب":"9.5 / 12","الدين":"13 / 16"}},
+{seat:"525",name:"اسامه محمد فكري حسين",subjects:{"اللغة العربية":"17.5 / 20","اللغة الإنجليزية":"17 / 20","العلوم التطبيقية":"31.5 / 40","التشريح":"11 / 20","مبادئ التمريض":"10.5 / 12","الحاسب":"9 / 12","الدين":"13 / 16"}},
+{seat:"526",name:"حمزه ادريس محمد قاسم",subjects:{"اللغة العربية":"17.5 / 20","اللغة الإنجليزية":"10 / 20","العلوم التطبيقية":"26 / 40","التشريح":"12.5 / 20","مبادئ التمريض":"6.5 / 12","الحاسب":"9.5 / 12","الدين":"14 / 16"}},
+{seat:"527",name:"زياد محمد خيري الراوي",subjects:{"اللغة العربية":"20 / 20","اللغة الإنجليزية":"11.5 / 20","العلوم التطبيقية":"27 / 40","التشريح":"14 / 20","مبادئ التمريض":"8.5 / 12","الحاسب":"9.5 / 12","الدين":"11 / 16"}},
+{seat:"528",name:"عبد الرحمن حسن احمد حسن",subjects:{"اللغة العربية":"18.5 / 20","اللغة الإنجليزية":"10 / 20","العلوم التطبيقية":"24 / 40","التشريح":"13.5 / 20","مبادئ التمريض":"5 / 12","الحاسب":"10 / 12","الدين":"13 / 16"}},
+{seat:"529",name:"عبد الله محمد جمعه حسين",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"10.5 / 20","العلوم التطبيقية":"35 / 40","التشريح":"17.5 / 20","مبادئ التمريض":"9 / 12","الحاسب":"10 / 12","الدين":"13 / 16"}},
+{seat:"530",name:"محمد احمد محمد ابوالمجد",subjects:{"اللغة العربية":"19 / 20","اللغة الإنجليزية":"8.5 / 20","العلوم التطبيقية":"30.5 / 40","التشريح":"16 / 20","مبادئ التمريض":"7.5 / 12","الحاسب":"10.5 / 12","الدين":"14.5 / 16"}},
+{seat:"531",name:"محمد احمد محمد احمد",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"17 / 20","العلوم التطبيقية":"35 / 40","التشريح":"18 / 20","مبادئ التمريض":"10.5 / 12","الحاسب":"11 / 12","الدين":"15 / 16"}},
+{seat:"532",name:"ايه سعد الله عبد الله علي",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"17 / 20","العلوم التطبيقية":"35.5 / 40","التشريح":"16.5 / 20","مبادئ التمريض":"11.5 / 12","الحاسب":"11 / 12","الدين":"14.5 / 16"}},
+{seat:"533",name:"داليا عبد السلام بدري محمد",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"15 / 20","العلوم التطبيقية":"34.5 / 40","التشريح":"12.5 / 20","مبادئ التمريض":"11.5 / 12","الحاسب":"11 / 12","الدين":"14.5 / 16"}},
+{seat:"534",name:"رضوى محمد فتحي عبد الحميد",subjects:{"اللغة العربية":"18.5 / 20","اللغة الإنجليزية":"9.5 / 20","العلوم التطبيقية":"27 / 40","التشريح":"12.5 / 20","مبادئ التمريض":"8 / 12","الحاسب":"11 / 12","الدين":"14.5 / 16"}},
+{seat:"535",name:"زمزم مصطفى فؤاد محمود",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"13.5 / 20","العلوم التطبيقية":"32 / 40","التشريح":"17 / 20","مبادئ التمريض":"9.5 / 12","الحاسب":"11.5 / 12","الدين":"14.5 / 16"}},
+{seat:"536",name:"زينب محمد عبد الدايم محمد",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"17 / 20","العلوم التطبيقية":"32.5 / 40","التشريح":"16 / 20","مبادئ التمريض":"11 / 12","الحاسب":"11.5 / 12","الدين":"11.5 / 16"}},
+{seat:"537",name:"سارة عامر عبد الراضي صديق",subjects:{"اللغة العربية":"18 / 20","اللغة الإنجليزية":"8 / 20","العلوم التطبيقية":"31 / 40","التشريح":"15.5 / 20","مبادئ التمريض":"7 / 12","الحاسب":"10.5 / 12","الدين":"11.5 / 16"}},
+{seat:"538",name:"شاهندا صابر سيد سعدي احمد",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"16.5 / 20","العلوم التطبيقية":"37.5 / 40","التشريح":"13 / 20","مبادئ التمريض":"8 / 12","الحاسب":"11 / 12","الدين":"14 / 16"}},
+{seat:"539",name:"فاطمه خيري عبدالله حسن",subjects:{"اللغة العربية":"20 / 20","اللغة الإنجليزية":"17 / 20","العلوم التطبيقية":"36 / 40","التشريح":"17 / 20","مبادئ التمريض":"11.5 / 12","الحاسب":"11 / 12","الدين":"15 / 16"}},
+{seat:"540",name:"ملك تيسير محمد الزاهر",subjects:{"اللغة العربية":"19.5 / 20","اللغة الإنجليزية":"16 / 20","العلوم التطبيقية":"32.5 / 40","التشريح":"15.5 / 20","مبادئ التمريض":"9.5 / 12","الحاسب":"11 / 12","الدين":"12 / 16"}},
+{seat:"541",name:"ملك محمد احمد محمد",subjects:{"اللغة العربية":"19 / 20","اللغة الإنجليزية":"15.5 / 20","العلوم التطبيقية":"34 / 40","التشريح":"17 / 20","مبادئ التمريض":"10.5 / 12","الحاسب":"10.5 / 12","الدين":"16 / 16"}},
+{seat:"542",name:"منه احمد عبد الفتاح احمد",subjects:{"اللغة العربية":"20 / 20","اللغة الإنجليزية":"18 / 20","العلوم التطبيقية":"34.5 / 40","التشريح":"16 / 20","مبادئ التمريض":"12 / 12","الحاسب":"10.5 / 12","الدين":"13 / 16"}},
+{seat:"543",name:"نوران احمد رشدي قناوي",subjects:{"اللغة العربية":"20 / 20","اللغة الإنجليزية":"8 / 20","العلوم التطبيقية":"32 / 40","التشريح":"13.5 / 20","مبادئ التمريض":"6.5 / 12","الحاسب":"11 / 12","الدين":"14 / 16"}},
+{seat:"544",name:"هاجر عبد النعيم رمضان بشاري",subjects:{"اللغة العربية":"20 / 20","اللغة الإنجليزية":"13.5 / 20","العلوم التطبيقية":"34.5 / 40","التشريح":"15.5 / 20","مبادئ التمريض":"6 / 12","الحاسب":"11.5 / 12","الدين":"15 / 16"}}
+];
+
+const icons={
+"اللغة العربية":"📖",
+"اللغة الإنجليزية":"📝",
+"العلوم التطبيقية":"🔬",
+"التشريح":"🧠",
+"مبادئ التمريض":"💉",
+"الحاسب":"💻",
+"الدين":"🕌"
+};
+
+function gradeColor(p){if(p>=85)return "good";if(p>=60)return "avg";return "bad"}
+
+function searchResult(){
+const name=document.getElementById("student-name").value.trim()
+const seat=document.getElementById("seat-number").value.trim()
+const student=results.find(s=>s.seat===seat && s.name.includes(name))
+const list=document.getElementById("subjects-list")
+list.innerHTML=""
+if(!student){document.getElementById("no-result").style.display="block";return}
+document.getElementById("no-result").style.display="none"
+document.getElementById("student-info").innerHTML=`<h2>${student.name}</h2><div>رقم الجلوس : ${student.seat}</div>`
+let total=0,max=0
+for(const sub in student.subjects){
+const g=student.subjects[sub]
+const [a,b]=g.split('/').map(x=>parseFloat(x))
+const p=(a/b)*100
+total+=a
+max+=b
+list.innerHTML+=`<div class="subject"><div class="subject-name">${icons[sub]} ${sub}</div><div class="grade ${gradeColor(p)}">${a} / ${b}</div></div>`
+}
+const percent=(total/max*100).toFixed(1)
+document.getElementById("total").innerHTML=`المجموع : ${total} / ${max}`
+document.getElementById("percent").innerHTML=`النسبة : ${percent}%`
+const sorted=results.map(s=>{
+let sum=0,maxSum=0
+for(const sub in s.subjects){const [a,b]=s.subjects[sub].split('/').map(x=>parseFloat(x));sum+=a;maxSum+=b}
+return {name:s.name,percent:(sum/maxSum*100).toFixed(1)}
+}).sort((a,b)=>b.percent-a.percent)
+const rankIndex=sorted.findIndex(s=>s.name===student.name)+1
+document.getElementById("rank").innerHTML=`ترتيب الطالب على الدفعة: ${rankIndex} / ${results.length}`
+document.getElementById("result-container").style.display="block"
+}
+
+function shareWhatsApp(){
+const name=document.getElementById("student-name").value.trim()
+const seat=document.getElementById("seat-number").value.trim()
+const student=results.find(s=>s.seat===seat && s.name.includes(name))
+if(!student)return
+let msg=`نتيجة الطالب ${student.name} (رقم الجلوس ${student.seat}):%0A`
+let total=0,max=0
+for(const sub in student.subjects){const g=student.subjects[sub];const [a,b]=g.split('/').map(x=>parseFloat(x));msg+=`${icons[sub]} ${sub}: ${a} / ${b}%0A`;total+=a;max+=b}
+const percent=(total/max*100).toFixed(1)
+msg+=`المجموع: ${total} / ${max}%0Aالنسبة: ${percent}%`
+window.open(`https://wa.me/?text=${msg}`, '_blank')
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة الطلاب - معهد رعاية الضبعية</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    display: flex;
+    background: linear-gradient(135deg, #1a2526, #2f3b3c);
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #0f1419;
+    color: #d4af37;
+    height: 100vh;
+    padding: 25px 15px;
+    position: sticky;
+    top: 0;
+    border-left: 1px solid #d4af37;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 1.4rem;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    margin: 8px 0;
+    color: #ccc;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar a i {
+    width: 25px;
+    font-size: 1.2rem;
+}
+
+.sidebar a:hover {
+    background: #d4af37;
+    color: #0f1419;
+}
+
+/* Main */
+.main {
+    flex: 1;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #1a2526, #2f3b3c);
+    color: #d4af37;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    border: 1px solid #d4af37;
+}
+
+.header h2 {
+    font-size: 1.5rem;
+}
+
+/* Cards */
+.cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.card {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-right: 4px solid #d4af37;
+}
+
+.card span {
+    color: #d4af37;
+    font-size: 1.8rem;
+    display: block;
+    margin-top: 8px;
+}
+
+/* Search */
+.search {
+    margin-bottom: 20px;
+}
+
+.search input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: 2px solid #d4af37;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.search input:focus {
+    border-color: #1a2526;
+    box-shadow: 0 0 10px rgba(212,175,55,0.3);
+}
+
+/* Table */
+.table-container {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    overflow-x: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+th {
+    background: #1a2526;
+    color: #d4af37;
+    padding: 15px 10px;
+    font-size: 1rem;
+}
+
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+td input, td select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: 'Cairo', sans-serif;
+    transition: all 0.3s;
+}
+
+td input:focus, td select:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 5px rgba(212,175,55,0.3);
+}
+
+/* Password field special styling */
+.password-field {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+/* Buttons */
+.btn-edit {
+    background: #d4af37;
+    color: #1a2526;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 3px;
+    transition: all 0.3s;
+}
+
+.btn-save {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 3px;
+    transition: all 0.3s;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 3px;
+    transition: all 0.3s;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 3px;
+    transition: all 0.3s;
+}
+
+.btn-edit:hover, .btn-save:hover, .btn-delete:hover, .btn-cancel:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.9);
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 15px 25px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .cards {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2><i class="fas fa-school"></i> لوحة التحكم</h2>
+    <a href="admin.html"><i class="fas fa-tachometer-alt"></i> الرئيسية</a>
+    <a href="class-first.html" style="background:#d4af37; color:#0f1419;"><i class="fas fa-users"></i> الطلاب</a>
+    <a href="Home.html"><i class="fas fa-chart-line"></i> النتائج</a>
+    <a href="exams.html"><i class="fas fa-book-open"></i> الاختبارات</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+    <div class="header">
+        <h2><i class="fas fa-user-graduate"></i> إدارة الطلاب</h2>
+        <p>تعديل جميع بيانات الطلاب (الاسم، اسم المستخدم، كلمة المرور، رقم الجلوس، بيانات ولي الأمر)</p>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards">
+        <div class="card">📊 إجمالي الطلاب <span id="totalStudents">0</span></div>
+    </div>
+
+    <!-- Search -->
+    <div class="search">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث عن طالب بالاسم أو اسم المستخدم أو رقم الجلوس...">
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table id="studentsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>الاسم الكامل</th>
+                    <th>اسم المستخدم</th>
+                    <th>كلمة المرور</th>
+                    <th>رقم الجلوس</th>
+                    <th>رقم الهاتف</th>
+                    <th>ولي الأمر</th>
+                    <th>رقم بطاقة ولي الأمر</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="studentsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let allStudents = [];
+let editingStudentCode = null;
+
+// دالة عرض رسالة
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.backgroundColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// تحميل الطلاب
+async function loadStudents() {
+    try {
+        const res = await fetch('/api/students');
+        if (!res.ok) throw new Error('فشل في جلب البيانات');
+        allStudents = await res.json();
+        console.log('Loaded students:', allStudents);
+        document.getElementById('totalStudents').textContent = allStudents.length;
+        renderStudents(allStudents);
+    } catch (error) {
+        console.error(error);
+        showToast('خطأ في تحميل بيانات الطلاب', 'error');
+    }
+}
+
+// عرض الطلاب في الجدول
+function renderStudents(students) {
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    students.forEach((student, index) => {
+        const studentCode = student.studentCode;
+        const isEditing = (editingStudentCode === studentCode);
+        
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${isEditing ? `<input type="text" id="fullName-${studentCode}" value="${escapeHtml(student.fullName)}" style="width:100%;">` : `<span>${escapeHtml(student.fullName)}</span>`}</td>
+            <td>${isEditing ? `<input type="text" id="username-${studentCode}" value="${escapeHtml(student.username)}" style="width:100%;">` : `<span>${escapeHtml(student.username)}</span>`}</td>
+            <td>${isEditing ? 
+                `<input type="password" id="password-${studentCode}" class="password-field" placeholder="اكتب كلمة مرور جديدة (اتركه فارغاً للتغيير)" style="width:100%;">` : 
+                `<span class="password-field">••••••••</span>`}</td>
+            <td>${isEditing ? `<input type="text" id="studentCodeInput-${studentCode}" value="${escapeHtml(student.studentCode || '')}" style="width:100%;" maxlength="7">` : `<span>${escapeHtml(student.studentCode || '-')}</span>`}</td>
+            <td>${isEditing ? `<input type="tel" id="phone-${studentCode}" value="${escapeHtml(student.profile?.phone || '')}" style="width:100%;">` : `<span>${escapeHtml(student.profile?.phone || '-')}</span>`}</td>
+            <td>${isEditing ? `<input type="text" id="parentName-${studentCode}" value="${escapeHtml(student.profile?.parentName || '')}" style="width:100%;">` : `<span>${escapeHtml(student.profile?.parentName || '-')}</span>`}</td>
+            <td>${isEditing ? `<input type="text" id="parentId-${studentCode}" value="${escapeHtml(student.profile?.parentId || '')}" style="width:100%;" maxlength="14">` : `<span>${escapeHtml(student.profile?.parentId || '-')}</span>`}</td>
+            <td>
+                ${!isEditing ? 
+                    `<button class="btn-edit" onclick="startEdit('${studentCode}')"><i class="fas fa-edit"></i> تعديل</button>
+                     <button class="btn-delete" onclick="deleteStudent('${studentCode}')"><i class="fas fa-trash"></i> حذف</button>` :
+                    `<button class="btn-save" onclick="saveEdit('${studentCode}')"><i class="fas fa-save"></i> حفظ</button>
+                     <button class="btn-cancel" onclick="cancelEdit()"><i class="fas fa-times"></i> إلغاء</button>`
+                }
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// دالة حماية من الـ XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// بدء التعديل
+function startEdit(studentCode) {
+    editingStudentCode = studentCode;
+    renderStudents(allStudents);
+}
+
+// إلغاء التعديل
+function cancelEdit() {
+    editingStudentCode = null;
+    renderStudents(allStudents);
+}
+
+// حفظ التعديلات
+async function saveEdit(studentCode) {
+    // البحث عن الطالب
+    const student = allStudents.find(s => s.studentCode === studentCode);
+    if (!student) {
+        showToast('لم يتم العثور على الطالب', 'error');
+        return;
+    }
+
+    // جمع البيانات الجديدة
+    const updatedData = {
+        fullName: document.getElementById(`fullName-${studentCode}`).value.trim(),
+        username: document.getElementById(`username-${studentCode}`).value.trim(),
+        studentCode: document.getElementById(`studentCodeInput-${studentCode}`).value.trim(),
+        profile: {
+            phone: document.getElementById(`phone-${studentCode}`).value.trim(),
+            parentName: document.getElementById(`parentName-${studentCode}`).value.trim(),
+            parentId: document.getElementById(`parentId-${studentCode}`).value.trim()
+        }
+    };
+    
+    // التحقق من كلمة المرور الجديدة
+    const newPassword = document.getElementById(`password-${studentCode}`).value.trim();
+    if (newPassword !== '') {
+        if (newPassword.length < 6) {
+            showToast('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل', 'error');
+            return;
+        }
+        updatedData.password = newPassword;
+    }
+
+    // التحقق من البيانات
+    if (!updatedData.fullName) {
+        showToast('الاسم الكامل مطلوب!', 'error');
+        return;
+    }
+    if (!updatedData.username) {
+        showToast('اسم المستخدم مطلوب!', 'error');
+        return;
+    }
+    if (updatedData.studentCode && (updatedData.studentCode.length < 1 || updatedData.studentCode.length > 7)) {
+        showToast('رقم الجلوس يجب أن يكون من 1 إلى 7 أرقام', 'error');
+        return;
+    }
+    if (updatedData.profile.parentId && updatedData.profile.parentId.length !== 14 && updatedData.profile.parentId.length !== 0) {
+        showToast('رقم بطاقة ولي الأمر يجب أن يكون 14 رقم أو اتركه فارغاً', 'error');
+        return;
+    }
+
+    // التحقق من عدم تكرار اسم المستخدم
+    const existingUser = allStudents.find(s => s.username === updatedData.username && s.studentCode !== studentCode);
+    if (existingUser) {
+        showToast('اسم المستخدم مستخدم من قبل!', 'error');
+        return;
+    }
+
+    // التحقق من عدم تكرار رقم الجلوس
+    const existingCode = allStudents.find(s => s.studentCode === updatedData.studentCode && s.studentCode !== studentCode);
+    if (existingCode && updatedData.studentCode) {
+        showToast('رقم الجلوس مستخدم من قبل!', 'error');
+        return;
+    }
+
+    showToast('جاري حفظ التغييرات...', 'info');
+
+    try {
+        const response = await fetch(`/api/students/${studentCode}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل الحفظ');
+        }
+
+        // إعادة تحميل البيانات
+        await loadStudents();
+        editingStudentCode = null;
+        
+        if (newPassword !== '') {
+            showToast('تم حفظ التغييرات بنجاح! (تم تغيير كلمة المرور)', 'success');
+        } else {
+            showToast('تم حفظ التغييرات بنجاح!', 'success');
+        }
+
+    } catch (error) {
+        console.error('Save error:', error);
+        showToast(error.message || 'حدث خطأ أثناء الحفظ', 'error');
+    }
+}
+
+// حذف طالب
+async function deleteStudent(studentCode) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الطالب؟ لا يمكن التراجع!')) return;
+
+    const student = allStudents.find(s => s.studentCode === studentCode);
+    if (!student) {
+        showToast('لم يتم العثور على الطالب', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/students/${studentCode}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل الحذف');
+        }
+
+        if (editingStudentCode === studentCode) {
+            editingStudentCode = null;
+        }
+        
+        await loadStudents();
+        showToast('تم حذف الطالب بنجاح!', 'success');
+
+    } catch (error) {
+        console.error('Delete error:', error);
+        showToast(error.message || 'حدث خطأ أثناء الحذف', 'error');
+    }
+}
+
+// البحث
+document.getElementById('searchInput').addEventListener('input', function() {
+    const value = this.value.toLowerCase();
+    const filtered = allStudents.filter(s =>
+        s.fullName.toLowerCase().includes(value) ||
+        s.username.toLowerCase().includes(value) ||
+        (s.studentCode && s.studentCode.toLowerCase().includes(value))
+    );
+    renderStudents(filtered);
+});
+
+// تحميل البيانات عند فتح الصفحة
+loadStudents();
+</script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>عن المطور | SchoolX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --g:#d4af37;--d:#1a2526;--d2:#2a3a3b;--bg:#0f1419;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:'Cairo',sans-serif;
+            background:var(--bg);
+            color:#fff;
+            min-height:100vh;
+            padding-bottom:90px;
+            font-size:15px;
+            line-height:1.7;
+        }
+        .c{max-width:650px;margin:0 auto;padding:15px 10px;}
+
+        header{
+            text-align:center;
+            padding:30px 20px 20px;
+            background:linear-gradient(135deg,var(--d),var(--d2));
+            border-radius:20px;
+            margin-bottom:20px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.6);
+            border-bottom:4px solid var(--g);
+        }
+        .avatar{
+            width:120px;height:120px;border-radius:50%;overflow:hidden;
+            border:5px solid var(--g);margin:0 auto 15px;
+            box-shadow:0 0 30px rgba(212,175,55,0.6);
+        }
+        .avatar img{width:100%;height:100%;object-fit:cover;}
+        header h1{font-size:1.8rem;color:var(--g);margin:10px 0;font-weight:700;}
+        header p{font-size:1.1rem;opacity:0.9;}
+
+        .card{
+            background:#fff;color:#111;border-radius:18px;overflow:hidden;
+            box-shadow:0 10px 30px rgba(0,0,0,0.5);
+            margin:20px 0;
+        }
+        .ch{
+            background:linear-gradient(135deg,var(--g),#b8972e);
+            padding:16px;text-align:center;color:#fff;
+        }
+        .ch h2{font-size:1.3rem;font-weight:700;}
+        .content{padding:20px;text-align:center;}
+        .text{
+            font-size:1rem;line-height:1.8;color:#333;
+            margin:15px auto;max-width:90%;
+        }
+        .skills{
+            display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+            margin:25px 0;
+        }
+        .skill{
+            background:var(--g);color:var(--d);padding:10px 20px;
+            border-radius:50px;font-weight:700;font-size:0.95rem;
+            box-shadow:0 5px 15px rgba(212,175,55,0.4);
+        }
+
+        .contact{margin:40px 0;}
+        .whatsapp-btn{
+            display:inline-flex;align-items:center;gap:12px;
+            background:#25D366;color:#fff;padding:16px 32px;
+            border-radius:50px;font-size:1.15rem;font-weight:700;
+            text-decoration:none;box-shadow:0 10px 30px rgba(37,211,102,0.4);
+            transition:all .4s;
+        }
+        .whatsapp-btn:hover{
+            transform:translateY(-5px);box-shadow:0 15px 40px rgba(37,211,102,0.6);
+        }
+        .qr{
+            width:170px;height:170px;margin:30px auto;
+            border:6px solid var(--g);border-radius:18px;
+            box-shadow:0 0 40px rgba(212,175,55,0.5);
+        }
+
+        /* النافبار المثالي لكل الأجهزة */
+        .nav{
+            position:fixed;
+            bottom:0;left:0;right:0;
+            height:72px;
+            background:linear-gradient(180deg,#1a2526,#2a3a3b);
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            border-top:3.5px solid #d4af37;
+            border-top-left-radius:22px;
+            border-top-right-radius:22px;
+            box-shadow:0 -8px 30px rgba(0,0,0,0.7);
+            z-index:9999;
+            padding:0 12px;
+        }
+        .nav::before{
+            content:'';
+            position:absolute;
+            top:-28px;
+            left:50%;
+            transform:translateX(-50%);
+            width:100px;
+            height:50px;
+            background:#d4af37;
+            border-radius:50%;
+            opacity:0.15;
+            filter:blur(22px);
+        }
+        .nav a{
+            color:#d4af37;
+            font-size:1.55rem;
+            width:52px;
+            height:52px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(255,255,255,0.07);
+            border-radius:50%;
+            transition:all .35s ease;
+            position:relative;
+            backdrop-filter:blur(8px);
+        }
+        .nav a:hover{
+            background:#d4af37;
+            color:#fff;
+            transform:translateY(-4px);
+        }
+        .nav a.active{
+            background:#d4af37 !important;
+            color:#fff !important;
+            transform:translateY(-14px) scale(1.18);
+            box-shadow:0 10px 28px rgba(212,175,55,0.7);
+        }
+        .nav a.active::after{
+            content:'';
+            position:absolute;
+            bottom:-10px;
+            left:50%;
+            transform:translateX(-50%);
+            width:7px;
+            height:7px;
+            background:#d4af37;
+            border-radius:50%;
+            box-shadow:0 0 20px #d4af37;
+        }
+
+        /* تحسين للموبايلات الصغيرة */
+        @media (max-width: 480px){
+            .nav{height:68px;padding:0 8px;}
+            .nav a{font-size:1.45rem;width:48px;height:48px;}
+            .nav a.active{transform:translateY(-12px) scale(1.15);}
+        }
+        @media (max-width: 360px){
+            .nav a{font-size:1.4rem;width:46px;height:46px;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="c">
+
+    <header>
+        <div class="avatar">
+            <img src="developer.jpg" alt="أحمد موسى">
+        </div>
+        <h1>أحمد موسى</h1>
+        <p>مطور نظام SchoolX بالكامل</p>
+    </header>
+
+    <div class="card">
+        <div class="ch"><h2>من أنا؟</h2></div>
+        <div class="content">
+            <p class="text">
+                أنا أحمد موسى، مطور ويب مصري من الأقصر، قمت ببرمجة وتصميم نظام SchoolX من الصفر بكل حب وعناية لخدمة طلاب وطالبات معهد رعاية الضبعية للتمريض.
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="ch"><h2>لماذا صنعت هذا النظام؟</h2></div>
+        <div class="content">
+            <p class="text">
+                لأني شايف إن الطالب المصري يستاهل أحسن وأسرع أدوات رقمية تمكّنه من متابعة دراسته ونتايجه وحضوره بسهولة تامة، بدون تعقيد ولا ورق ولا زحمة.
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="ch"><h2>مجالات خبرتي</h2></div>
+        <div class="content">
+            <div class="skills">
+                <div class="skill">تطوير الواجهات</div>
+                <div class="skill">قواعد البيانات</div>
+                <div class="skill">الذكاء الاصطناعي</div>
+                <div class="skill">تجربة المستخدم</div>
+                <div class="skill">نشر التطبيقات</div>
+                <div class="skill">أمن المعلومات</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="ch"><h2>تواصل معي</h2></div>
+        <div class="content contact">
+            <p style="margin-bottom:25px;font-size:1.1rem;">
+                أي فكرة، اقتراح، مشكلة، أو حتى كلمة شكر… أنا هنا عشانكم 24 ساعة
+            </p>
+            <a href="https://wa.me/qr/LLFTULMCQBNPB1" class="whatsapp-btn" target="_blank">
+                <i class="fab fa-whatsapp"></i> تواصل واتساب
+            </a>
+            <div>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=https://wa.me/qr/LLFTULMCQBNPB1" alt="واتساب أحمد موسى" class="qr">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- النافبار المثالي -->
+<nav class="nav">
+    <a href="index.html"><i class="fa-solid fa-house"></i></a>
+    <a href="Home.html"><i class="fa-solid fa-chart-line"></i></a>
+    <a href="profile.html"><i class="fa-solid fa-user"></i></a>
+    <a href="exams.html"><i class="fa-solid fa-book-open"></i></a>
+    
+</nav>
+
+</body>
+</html> 

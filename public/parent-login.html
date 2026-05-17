@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول ولي الأمر</title>
+    <link rel="stylesheet" href="login.css"> <!-- نفس ملف login.css بتاع signup.html -->
+</head>
+<body>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار المعهد" class="logo">
+        <h1>تسجيل دخول ولي الأمر</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="login-form-container">
+            <h2>مرحباً بك يا ولي الأمر 👨‍👩‍👧</h2>
+            <p style="text-align:center;color:#94a3b8;margin-bottom:30px;">
+                ادخل بياناتك عشان تشوف نتايج وتقدم ابنك/بنتك
+            </p>
+            <form id="parent-login-form">
+                <div class="input-group">
+                    <label for="parentName">اسم ولي الأمر رباعي</label>
+                    <input type="text" id="parentName" placeholder="مثال: محمد علي أحمد السيد" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="parentId">رقم بطاقة ولي الأمر</label>
+                    <input type="text" id="parentId" inputmode="numeric" maxlength="14" placeholder="14 رقم بالظبط" required>
+                </div>
+
+                <button type="submit" class="submit-btn">تسجيل الدخول</button>
+
+                <p style="text-align: center; margin-top: 20px;">
+                    طالب جديد؟ <a href="signup.html" class="signup-link">إنشاء حساب طالب</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>Developed by Ahmed Mousa <span class="heart">❤</span></p>
+    </footer>
+
+    <script>
+        function showToast(message, type = 'error') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px;
+                color: white; font-weight: bold; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                background-color: ${type === 'success' ? '#28a745' : '#dc3545'};
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        document.getElementById('parent-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const parentName = document.getElementById('parentName').value.trim();
+            const parentId = document.getElementById('parentId').value.replace(/\s/g, '');
+
+            if (!parentName || !parentId) {
+                showToast('يرجى ملء جميع الحقول!', 'error');
+                return;
+            }
+
+            if (parentId.length !== 14 || !/^\d{14}$/.test(parentId)) {
+                showToast('رقم البطاقة يجب أن يكون 14 رقم بالظبط!', 'error');
+                return;
+            }
+
+            try {
+                showToast('جاري البحث عن حساب ابنك...', 'info');
+
+                const response = await fetch('/api/students');
+                if (!response.ok) throw new Error('فشل في جلب البيانات');
+                const students = await response.json();
+
+                const student = students.find(s => 
+                    s.profile && 
+                    s.profile.parentName && s.profile.parentName.toLowerCase() === parentName.toLowerCase() &&
+                    s.profile.parentId === parentId
+                );
+
+                if (!student) {
+                    showToast('لم يتم العثور على حساب مرتبط بهذه البيانات!', 'error');
+                    return;
+                }
+
+                // حفظ بيانات الطالب + علامة إنه ولي أمر
+                localStorage.setItem('loggedInUser', JSON.stringify({
+    username: student.username,
+    fullName: student.fullName,
+    type: 'parent', // بدل role
+    studentId: student.id,
+    parentView: true
+}));
+
+                showToast(`مرحباً ${parentName}، جاري تحويلك لحساب ابنك...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'Home.html'; // أو Home.html - الصفحة الرئيسية
+                }, 1500);
+
+            } catch (error) {
+                console.error('خطأ في تسجيل دخول ولي الأمر:', error);
+                showToast('حدث خطأ، جرب تاني!', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="google-adsense-account" content="ca-pub-7676282531413677">
+    <title>نتايج الطلاب - معهد رعاية الضبعية الفني للتمريض</title>
+    <link rel="stylesheet" href="Home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7676282531413677" crossorigin="anonymous"></script>
+</head>
+<body>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار معهد رعاية الضبعية" class="logo">
+        <h1>نتايج الطلاب - معهد رعاية الضبعية الفني للتمريض</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </header>
+
+    <div class="main-container">
+        <div class="result-form-container">
+            <div class="welcome-message" id="welcome-message"></div>
+            <h2>ابحث عن نتيجتك</h2>
+            <form id="search-form">
+                <div class="input-group">
+                    <label for="search-name">اسم الطالب</label>
+                    <input type="text" id="search-name" name="student-name" placeholder="أدخل اسم الطالب" required>
+                </div>
+                <div class="input-group">
+                    <label for="search-id"> رقم الجلوس  </label>
+                    <input type="text" id="search-id" name="student-id" placeholder="أدخل رقم الجلوس " required>
+                </div>
+                <button type="submit" class="submit-btn">عرض النتيجة</button>
+            </form>
+
+            <!-- قسم لوحة التحكم التفاعلية -->
+            <section class="student-dashboard" id="dashboard">
+                <h2>لوحة تحكمك</h2>
+                <div class="dashboard-content">
+                    <div class="stats">
+                        <p id="student-percentage">نسبة نجاحك: --%</p>
+                        <p id="class-average">متوسط الفصل: --%</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="gradesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="result-table">
+                <h3>النتيجة</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>البيانات</th>
+                                <th>القيم</th>
+                                <th>المجموع</th>
+                                <th>النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="violations-section">
+                <h3>الإنذارات والمخالفات</h3>
+                <div class="table-wrapper">
+                    <table class="violations-table">
+                        <thead>
+                            <tr>
+                                <th>النوع</th>
+                                <th>السبب</th>
+                                <th>العقوبة</th>
+                                <th>استدعاء ولي الأمر</th>
+                                <th>تاريخ الإضافة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="violations-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="notifications-section">
+                <h2>الإشعارات</h2>
+                <div id="notifications-list" class="notifications-list">
+                    <div id="notifications-table" class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>نص الإشعار</th>
+                                    <th>تاريخ الإضافة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notifications-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-bar" id="nav-bar"></nav>
+
+    <footer>
+        <p>Developed by Ahmed Moussa <span class="heart">❤</span></p>
+    </footer>
+
+    <script src="crypto-js.js"></script>
+    <script src="auth.js"></script>
+    <script src="Home.js"></script>
+</body>
+</html>
