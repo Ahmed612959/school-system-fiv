@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     // التوجيه حسب نوع المستخدم
                     if (data.user.type === 'admin') {
-                        console.log('🚀 [4/4] التوجيه إلى Admin.html');
-                        location.href = 'Admin.html';
+                        console.log('🚀 [4/4] التوجيه إلى admin.html');
+                        location.href = 'admin.html';
                     } else {
                         console.log('🚀 [4/4] التوجيه إلى Home.html');
                         location.href = 'Home.html';
