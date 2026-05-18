@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الحضور - الصف الأول</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+        /* نفس الستايلات السابقة */
+        .grade-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .grade-tab {
+            padding: 10px 25px;
+            background: #1a2526;
+            color: #d4af37;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .grade-tab.active {
+            background: #d4af37;
+            color: #1a2526;
+        }
+        .grade-tab:hover {
+            transform: translateY(-2px);
+        }
+        /* باقي الستايلات من attendance.html */
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار المعهد" class="logo">
+        <h1>تسجيل الحضور والغياب - الصف الأول</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </header>
+
+    <div class="admin-container">
+        <!-- أزرار التنقل بين الصفوف -->
+        <div class="grade-tabs">
+            <a href="attendance-first.html" class="grade-tab active">🎓 الصف الأول</a>
+            <a href="attendance-second.html" class="grade-tab">📚 الصف الثاني</a>
+            <a href="attendance-third.html" class="grade-tab">📖 الصف الثالث</a>
+        </div>
+
+        <!-- باقي محتوى صفحة الحضور (نفس attendance.html) -->
+        <div class="summary-card">
+            <h3>📊 ملخص الحضور لليوم - الصف الأول</h3>
+            <div class="summary-stats" id="summaryStats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">إجمالي الطلاب</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="presentCount">0</div>
+                    <div class="stat-label">✅ حاضرون</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="absentCount">0</div>
+                    <div class="stat-label">❌ غائبون</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="lateCount">0</div>
+                    <div class="stat-label">⏰ متأخرون</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="presentPercentage">0%</div>
+                    <div class="stat-label">نسبة الحضور</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bulk-buttons">
+            <button class="bulk-btn bulk-present" onclick="bulkUpdate('present')">✅ تحديد الكل حاضر</button>
+            <button class="bulk-btn bulk-absent" onclick="bulkUpdate('absent')">❌ تحديد الكل غائب</button>
+            <button class="bulk-btn bulk-late" onclick="bulkUpdate('late')">⏰ تحديد الكل متأخر</button>
+        </div>
+
+        <div class="date-picker">
+            <label for="attendance-date">اختر التاريخ: </label>
+            <input type="date" id="attendance-date" onchange="loadAttendance()">
+        </div>
+
+        <div class="search-section">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث باسم الطالب أو رقم الجلوس..." oninput="filterStudents()">
+            <div class="search-info" id="searchInfo"></div>
+        </div>
+
+        <div class="attendance-table">
+            <div class="table-wrapper">
+                <td>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>رقم الجلوس</th>
+                            <th>اسم الطالب</th>
+                            <th>الحالة</th>
+                            <th>ملاحظة</th>
+                            <th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="submit-btn" onclick="saveAttendance()">💾 حفظ جميع التغييرات</button>
+        </div>
+    </div>
+
+    <script>
+        const GRADE = 'first'; // first, second, third
+        let students = [];
+        let filteredStudents = [];
+        let attendanceRecords = {};
+        let currentDate = new Date().toISOString().split('T')[0];
+
+        async function loadStudents() {
+            try {
+                const response = await fetch(`/api/students/by-grade/${GRADE}`);
+                students = await response.json();
+                filteredStudents = [...students];
+                document.getElementById('attendance-date').value = currentDate;
+                await loadAttendance();
+                updateSearchInfo();
+            } catch (error) {
+                console.error('Error loading students:', error);
+                showToast('خطأ في تحميل بيانات الطلاب', 'error');
+            }
+        }
+
+        async function loadAttendance() {
+            currentDate = document.getElementById('attendance-date').value;
+            try {
+                const response = await fetch(`/api/attendance/${currentDate}`);
+                const records = await response.json();
+                attendanceRecords = {};
+                records.forEach(record => {
+                    attendanceRecords[record.studentCode] = record;
+                });
+                renderAttendanceTable();
+                updateSummary();
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (searchTerm === '') {
+                filteredStudents = [...students];
+            } else {
+                filteredStudents = students.filter(student => 
+                    student.fullName.toLowerCase().includes(searchTerm) ||
+                    student.studentCode.toLowerCase().includes(searchTerm)
+                );
+            }
+            renderAttendanceTable();
+            updateSearchInfo();
+        }
+
+        function updateSearchInfo() {
+            const searchInfo = document.getElementById('searchInfo');
+            if (filteredStudents.length === students.length) {
+                searchInfo.innerHTML = `📋 عرض كل طلاب الصف (${students.length} طالب)`;
+            } else {
+                searchInfo.innerHTML = `🔍 تم العثور على ${filteredStudents.length} طالب من أصل ${students.length}`;
+            }
+        }
+
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendance-table-body');
+            tbody.innerHTML = '';
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="no-results">لا توجد طلاب في هذا الصف</td></tr>`;
+                return;
+            }
+            filteredStudents.forEach((student, index) => {
+                const record = attendanceRecords[student.studentCode];
+                const status = record ? record.status : 'present';
+                const note = record ? (record.note || '') : '';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student.studentCode}</td>
+                    <td>${student.fullName}</td>
+                    <td>
+                        <select class="status-select" data-code="${student.studentCode}">
+                            <option value="present" ${status === 'present' ? 'selected' : ''}>✅ حاضر</option>
+                            <option value="absent" ${status === 'absent' ? 'selected' : ''}>❌ غائب</option>
+                            <option value="late" ${status === 'late' ? 'selected' : ''}>⏰ متأخر</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="note-input" data-code="${student.studentCode}" value="${escapeHtml(note)}" placeholder="ملاحظة"></td>
+                    <td><button class="btn-attendance" onclick="updateSingle('${student.studentCode}')"><i class="fas fa-save"></i> حفظ</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        window.updateSingle = async function(studentCode) {
+            const select = document.querySelector(`.status-select[data-code="${studentCode}"]`);
+            const noteInput = document.querySelector(`.note-input[data-code="${studentCode}"]`);
+            const student = students.find(s => s.studentCode === studentCode);
+            const data = { studentCode, studentName: student.fullName, date: currentDate, status: select.value, note: noteInput?.value || '', recordedBy: 'admin' };
+            try {
+                const response = await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (response.ok) { showToast('تم حفظ الحضور بنجاح', 'success'); await loadAttendance(); }
+            } catch (error) { showToast('خطأ في حفظ الحضور', 'error'); }
+        };
+
+        window.bulkUpdate = function(status) {
+            document.querySelectorAll('.status-select').forEach(select => select.value = status);
+            showToast(`تم تغيير جميع الطلاب إلى ${status === 'present' ? 'حاضر' : status === 'absent' ? 'غائب' : 'متأخر'}`, 'info');
+        };
+
+        window.saveAttendance = async function() {
+            const updates = [];
+            document.querySelectorAll('.status-select').forEach(select => {
+                const studentCode = select.dataset.code;
+                const noteInput = document.querySelector(`.note-input[data-code="${studentCode}"]`);
+                updates.push({ code: studentCode, name: students.find(s => s.studentCode === studentCode)?.fullName, status: select.value, note: noteInput?.value || '' });
+            });
+            try {
+                const response = await fetch('/api/attendance/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: currentDate, students: updates, recordedBy: 'admin' }) });
+                if (response.ok) { showToast('تم حفظ جميع تغييرات الحضور بنجاح', 'success'); await loadAttendance(); }
+            } catch (error) { showToast('خطأ في حفظ التغييرات', 'error'); }
+        };
+
+        function updateSummary() {
+            let present = 0, absent = 0, late = 0;
+            students.forEach(student => {
+                const record = attendanceRecords[student.studentCode];
+                if (record) { if (record.status === 'present') present++; else if (record.status === 'absent') absent++; else if (record.status === 'late') late++; }
+                else present++;
+            });
+            const total = students.length, percentage = total > 0 ? (present / total) * 100 : 0;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+            document.getElementById('lateCount').textContent = late;
+            document.getElementById('presentPercentage').textContent = percentage.toFixed(1) + '%';
+        }
+
+        function showToast(message, type) {
+            const bg = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107';
+            Toastify({ text: message, duration: 3000, gravity: 'top', position: 'right', backgroundColor: bg }).showToast();
+        }
+
+        window.logout = function() { localStorage.removeItem('loggedInUser'); window.location.href = 'login.html'; };
+        loadStudents();
+    </script>
+</body>
+</html>
