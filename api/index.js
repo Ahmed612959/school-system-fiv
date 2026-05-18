@@ -407,6 +407,7 @@ app.post('/api/register-student', async (req, res) => {
             fullName,
             username: username.toLowerCase(),
             studentCode,
+            grade: grade || 'first', // 👈 أضف هذا
             password: hashedPassword,
             profile: { phone, parentName, parentId }
         });
