@@ -787,6 +787,19 @@ app.use((err, req, res, next) => {
     });
 });
 
+
+// جلب الطلاب حسب الصف
+app.get('/api/students/by-grade/:grade', async (req, res) => {
+    try {
+        const { grade } = req.params;
+        const students = await Student.find({ grade }).select('-password');
+        res.json(students);
+    } catch (error) {
+        console.error('Error fetching students by grade:', error);
+        res.status(500).json({ error: 'خطأ في جلب الطلاب حسب الصف' });
+    }
+});
+
 // ====================== التصدير لـ Vercel (مهم جداً) ======================
 // ✅ هذا السطر هو المطلوب لـ Vercel - لا تستخدم app.listen()
 module.exports = app;
