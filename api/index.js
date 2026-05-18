@@ -390,7 +390,7 @@ app.post('/api/login', async (req, res) => {
 // ====================== تسجيل طالب جديد ======================
 app.post('/api/register-student', async (req, res) => {
     try {
-        const { fullName, username, password, studentCode, phone, parentName, parentId } = req.body;
+        const { fullName, username, password, studentCode, grade, phone, parentName, parentId } = req.body;
 
         if (!fullName || !username || !password || !studentCode) {
             return res.status(400).json({ error: 'البيانات ناقصة' });
@@ -407,7 +407,7 @@ app.post('/api/register-student', async (req, res) => {
             fullName,
             username: username.toLowerCase(),
             studentCode,
-            grade: grade || 'first', // 👈 أضف هذا
+            grade: grade || 'first',
             password: hashedPassword,
             profile: { phone, parentName, parentId }
         });
