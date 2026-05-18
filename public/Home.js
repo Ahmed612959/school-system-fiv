@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         tableBody.innerHTML = '';
         if (notifications.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا</td></td>';
+            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا</td></tr>';
             return;
         }
 
@@ -143,6 +143,100 @@ document.addEventListener('DOMContentLoaded', async function() {
         return result;
     }
 
+    // ====================== إحصائيات الحضور والغياب ======================
+    let attendanceStats = null;
+    let attendanceRecords = [];
+
+    // جلب إحصائيات الحضور للطالب
+    async function fetchAttendanceStats(studentCode) {
+        try {
+            const response = await fetch(`${BASE_URL}/api/attendance/student/${studentCode}`);
+            if (response.ok) {
+                attendanceRecords = await response.json();
+                
+                if (attendanceRecords.length === 0) {
+                    attendanceStats = null;
+                    return null;
+                }
+                
+                const present = attendanceRecords.filter(a => a.status === 'present').length;
+                const absent = attendanceRecords.filter(a => a.status === 'absent').length;
+                const late = attendanceRecords.filter(a => a.status === 'late').length;
+                const total = attendanceRecords.length;
+                const percentage = total > 0 ? (present / total) * 100 : 0;
+                
+                // آخر يوم حضور (أحدث تاريخ)
+                const lastPresent = attendanceRecords.filter(a => a.status === 'present').sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+                // آخر يوم غياب (أحدث تاريخ)
+                const lastAbsent = attendanceRecords.filter(a => a.status === 'absent').sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+                
+                attendanceStats = {
+                    present,
+                    absent,
+                    late,
+                    total,
+                    percentage: percentage.toFixed(1),
+                    lastPresentDate: lastPresent ? formatDate(lastPresent.date) : null,
+                    lastAbsentDate: lastAbsent ? formatDate(lastAbsent.date) : null
+                };
+                return attendanceStats;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching attendance stats:', error);
+            return null;
+        }
+    }
+
+    // تنسيق التاريخ (YYYY-MM-DD إلى 2025-01-15)
+    function formatDate(dateStr) {
+        if (!dateStr) return null;
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+    }
+
+    // عرض إحصائيات الحضور في الصفحة
+    function renderAttendanceStats() {
+        const section = document.getElementById('attendanceStatsSection');
+        if (!section) return;
+        
+        const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+        if (!user || user.type !== 'student') {
+            section.style.display = 'none';
+            return;
+        }
+        
+        if (!attendanceStats) {
+            section.style.display = 'block';
+            document.getElementById('noAttendanceMessage').style.display = 'block';
+            document.querySelector('.attendance-stats-grid').style.display = 'none';
+            document.querySelector('.attendance-dates').style.display = 'none';
+            return;
+        }
+        
+        section.style.display = 'block';
+        document.getElementById('noAttendanceMessage').style.display = 'none';
+        document.querySelector('.attendance-stats-grid').style.display = 'grid';
+        document.querySelector('.attendance-dates').style.display = 'flex';
+        
+        document.getElementById('presentCount').textContent = attendanceStats.present;
+        document.getElementById('absentCount').textContent = attendanceStats.absent;
+        document.getElementById('lateCount').textContent = attendanceStats.late;
+        document.getElementById('attendancePercentage').textContent = attendanceStats.percentage + '%';
+        document.getElementById('lastPresentDate').innerHTML = attendanceStats.lastPresentDate || 'لم يتم تسجيل بعد';
+        document.getElementById('lastAbsentDate').innerHTML = attendanceStats.lastAbsentDate || 'لم يتم تسجيل بعد';
+        
+        // تغيير لون نسبة الحضور
+        const percentageEl = document.getElementById('attendancePercentage');
+        const percentageValue = parseFloat(attendanceStats.percentage);
+        if (percentageValue >= 90) percentageEl.style.color = '#28a745';
+        else if (percentageValue >= 75) percentageEl.style.color = '#ffc107';
+        else percentageEl.style.color = '#dc3545';
+    }
+
     function renderDashboard() {
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         const dashboard = document.getElementById('dashboard');
@@ -196,6 +290,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             });
         }
+        
+        // جلب إحصائيات الحضور للطالب
+        fetchAttendanceStats(student.studentCode).then(() => {
+            renderAttendanceStats();
+        });
     }
 
     function calculateClassAverage() {
