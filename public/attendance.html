@@ -121,6 +121,35 @@
             background: #ffc107;
             color: #1a2526;
         }
+        .search-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border: 2px solid #d4af37;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            border-color: #1a2526;
+            box-shadow: 0 0 10px rgba(212,175,55,0.3);
+        }
+        .search-info {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -168,9 +197,15 @@
             <input type="date" id="attendance-date" onchange="loadAttendance()">
         </div>
 
+        <!-- قسم البحث عن الطالب -->
+        <div class="search-section">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث باسم الطالب أو رقم الجلوس..." oninput="filterStudents()">
+            <div class="search-info" id="searchInfo"></div>
+        </div>
+
         <div class="attendance-table">
             <div class="table-wrapper">
-                <table>
+                <table id="attendanceTable">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -194,6 +229,7 @@
     <script src="auth.js"></script>
     <script>
         let students = [];
+        let filteredStudents = [];
         let attendanceRecords = {};
         let currentDate = new Date().toISOString().split('T')[0];
 
@@ -204,8 +240,10 @@
                 students = await response.json();
                 // عرض الطلاب الذين لديهم درجات فقط (مسجلين في النظام)
                 students = students.filter(s => s.subjects && s.subjects.length > 0);
+                filteredStudents = [...students];
                 document.getElementById('attendance-date').value = currentDate;
                 await loadAttendance();
+                updateSearchInfo();
             } catch (error) {
                 console.error('Error loading students:', error);
                 showToast('خطأ في تحميل بيانات الطلاب', 'error');
@@ -232,12 +270,50 @@
             }
         }
 
-        // عرض جدول الحضور
+        // البحث عن الطالب
+        function filterStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                filteredStudents = [...students];
+            } else {
+                filteredStudents = students.filter(student => 
+                    student.fullName.toLowerCase().includes(searchTerm) ||
+                    student.studentCode.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            renderAttendanceTable();
+            updateSearchInfo();
+        }
+
+        // تحديث معلومات البحث
+        function updateSearchInfo() {
+            const searchInfo = document.getElementById('searchInfo');
+            if (filteredStudents.length === students.length) {
+                searchInfo.innerHTML = `📋 عرض كل الطلاب (${students.length} طالب)`;
+            } else {
+                searchInfo.innerHTML = `🔍 تم العثور على ${filteredStudents.length} طالب من أصل ${students.length}`;
+            }
+        }
+
+        // عرض جدول الحضور (مع الطلاب المصفاة فقط)
         function renderAttendanceTable() {
             const tbody = document.getElementById('attendance-table-body');
             tbody.innerHTML = '';
             
-            students.forEach((student, index) => {
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="no-results">
+                            <i class="fas fa-search"></i> لا توجد نتائج مطابقة للبحث
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredStudents.forEach((student, index) => {
                 const record = attendanceRecords[student.studentCode];
                 const status = record ? record.status : 'present';
                 const note = record ? (record.note || '') : '';
@@ -255,14 +331,24 @@
                         </select>
                     </td>
                     <td>
-                        <input type="text" class="note-input" data-code="${student.studentCode}" value="${note}" placeholder="ملاحظة (اختياري)">
+                        <input type="text" class="note-input" data-code="${student.studentCode}" value="${escapeHtml(note)}" placeholder="ملاحظة (اختياري)" style="width: 100%; padding: 5px;">
                     </td>
                     <td>
-                        <button class="btn-attendance" onclick="updateSingle('${student.studentCode}')">حفظ</button>
+                        <button class="btn-attendance" onclick="updateSingle('${student.studentCode}')">
+                            <i class="fas fa-save"></i> حفظ
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        // دالة لتشفير النص
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // تحديث حالة طالب واحد
@@ -276,7 +362,7 @@
                 studentName: student.fullName,
                 date: currentDate,
                 status: select.value,
-                note: noteInput.value,
+                note: noteInput ? noteInput.value : '',
                 recordedBy: 'admin'
             };
             
@@ -299,17 +385,17 @@
 
         // تحديث جميع الطلاب بحالة واحدة
         window.bulkUpdate = async function(status) {
-            for (const student of students) {
+            for (const student of filteredStudents) {
                 const select = document.querySelector(`.status-select[data-code="${student.studentCode}"]`);
                 if (select) select.value = status;
             }
-            showToast(`تم تغيير جميع الطلاب إلى ${status === 'present' ? 'حاضر' : status === 'absent' ? 'غائب' : 'متأخر'}`, 'info');
+            showToast(`تم تغيير جميع الطلاب المعروضين إلى ${status === 'present' ? 'حاضر' : status === 'absent' ? 'غائب' : 'متأخر'}`, 'info');
         };
 
         // حفظ جميع التغييرات
         window.saveAttendance = async function() {
             const updates = [];
-            for (const student of students) {
+            for (const student of filteredStudents) {
                 const select = document.querySelector(`.status-select[data-code="${student.studentCode}"]`);
                 const noteInput = document.querySelector(`.note-input[data-code="${student.studentCode}"]`);
                 
