@@ -578,3 +578,124 @@ canvas#gradesChart {
     .violations-table th:nth-child(4), .violations-table td:nth-child(4) { min-width: 15px; }
     .violations-table th:nth-child(5), .violations-table td:nth-child(5) { min-width: 35px; }
 }
+
+/* ====================== إحصائيات الحضور والغياب ====================== */
+.attendance-stats-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #d4af37;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.attendance-stats-section h2 {
+    color: #1a2526;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.attendance-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-card.present { border-right: 4px solid #28a745; }
+.stat-card.absent { border-right: 4px solid #dc3545; }
+.stat-card.late { border-right: 4px solid #ffc107; }
+.stat-card.percentage { border-right: 4px solid #d4af37; }
+
+.stat-icon {
+    font-size: 2rem;
+}
+
+.stat-card.present .stat-icon { color: #28a745; }
+.stat-card.absent .stat-icon { color: #dc3545; }
+.stat-card.late .stat-icon { color: #ffc107; }
+.stat-card.percentage .stat-icon { color: #d4af37; }
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #1a2526;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.attendance-dates {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.date-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.date-card i {
+    font-size: 1.2rem;
+}
+
+.date-card i.fa-calendar-check { color: #28a745; }
+.date-card i.fa-calendar-times { color: #dc3545; }
+
+.no-attendance-message {
+    text-align: center;
+    padding: 20px;
+    background: #fff3cd;
+    border-radius: 10px;
+    color: #856404;
+    margin-top: 15px;
+}
+
+.no-attendance-message i {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .attendance-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .stat-number {
+        font-size: 1.4rem;
+    }
+    .attendance-dates {
+        flex-direction: column;
+    }
+}
