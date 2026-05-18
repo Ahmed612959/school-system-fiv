@@ -39,6 +39,7 @@ const studentSchema = new mongoose.Schema({
     studentCode: { type: String, required: true, unique: true },
     username: { type: String, unique: true },
     password: String,
+      grade: { type: String, enum: ['first', 'second', 'third'], default: 'first' }, // 👈 الحقل الجديد
     semester: String,
     subjects: Array,
     profile: {
