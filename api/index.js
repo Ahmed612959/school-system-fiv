@@ -1,5 +1,7 @@
 require('dotenv').config();
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✅ Found' : '❌ Not found');
+// زيادة مهلة الاتصال الافتراضية
+process.env.MONGODB_CONNECTION_TIMEOUT_MS = 60000;
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,7 +10,6 @@ const crypto = require('crypto');
 const pdfParse = require('pdf-parse');
 
 const app = express();
-
 // ====================== MIDDLEWARE ======================
 app.use(cors({
     origin: '*',
@@ -110,16 +111,40 @@ const ExamResult = mongoose.models.ExamResult || mongoose.model('ExamResult', ex
 // ====================== الاتصال بقاعدة البيانات ======================
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// زيادة مهلة الاتصال الافتراضية
+process.env.MONGODB_CONNECTION_TIMEOUT_MS = 60000;
+
 if (!MONGODB_URI) {
     console.error('❌ MONGODB_URI is not set in environment variables!');
 } else {
     console.log('📡 Connecting to MongoDB...');
-    mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 8000,
-        socketTimeoutMS: 45000,
-    })
-    .then(() => console.log('✅ MongoDB connected successfully'))
-    .catch(err => console.error('❌ MongoDB connection error:', err.message));
+    
+    // دالة الاتصال
+    function connectToMongoDB() {
+        mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 60000,
+            connectTimeoutMS: 30000,
+            heartbeatFrequencyMS: 5000,
+        })
+        .then(() => console.log('✅ MongoDB connected successfully'))
+        .catch(err => {
+            console.error('❌ MongoDB connection error:', err.message);
+            setTimeout(connectToMongoDB, 10000); // إعادة المحاولة بعد 10 ثواني
+        });
+    }
+    
+    connectToMongoDB();
+    
+    // معالج الأخطاء وإعادة المحاولة
+    mongoose.connection.on('error', (err) => {
+        console.error('❌ MongoDB error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+        console.log('⚠️ MongoDB disconnected, reconnecting...');
+        setTimeout(connectToMongoDB, 5000);
+    });
 }
 
 
