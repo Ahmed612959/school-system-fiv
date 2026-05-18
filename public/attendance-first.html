@@ -3,78 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الحضور - الصف الأول</title>
+    <title>تسجيل الحضور - الصف الأول | معهد رعاية الضبعية</title>
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <style>
-        /* نفس الستايلات السابقة */
-        .grade-tabs {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .grade-tab {
-            padding: 10px 25px;
-            background: #1a2526;
-            color: #d4af37;
-            text-decoration: none;
-            border-radius: 30px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .grade-tab.active {
-            background: #d4af37;
-            color: #1a2526;
-        }
-        .grade-tab:hover {
-            transform: translateY(-2px);
-        }
-        /* باقي الستايلات من attendance.html */
+        .attendance-table { width: 100%; overflow-x: auto; }
+        .attendance-table table { width: 100%; border-collapse: collapse; }
+        .attendance-table th, .attendance-table td { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; }
+        .attendance-table th { background: #1a2526; color: #d4af37; }
+        .btn-attendance { background: #d4af37; color: #1a2526; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin: 0 5px; }
+        .btn-attendance:hover { background: #1a2526; color: #d4af37; }
+        .date-picker { text-align: center; margin-bottom: 20px; }
+        .date-picker input { padding: 10px; font-size: 16px; border: 2px solid #d4af37; border-radius: 8px; }
+        .summary-card { background: linear-gradient(135deg, #1a2526, #2f3b3c); color: #d4af37; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .summary-stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .stat-box { text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; min-width: 120px; }
+        .stat-number { font-size: 28px; font-weight: bold; }
+        .stat-label { font-size: 14px; }
+        .bulk-buttons { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .bulk-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .bulk-present { background: #28a745; color: white; }
+        .bulk-absent { background: #dc3545; color: white; }
+        .bulk-late { background: #ffc107; color: #1a2526; }
+        .search-section { margin-bottom: 20px; text-align: center; }
+        .search-input { width: 100%; max-width: 400px; padding: 12px 20px; border: 2px solid #d4af37; border-radius: 30px; font-size: 16px; outline: none; }
+        .search-input:focus { border-color: #1a2526; box-shadow: 0 0 10px rgba(212,175,55,0.3); }
+        .search-info { margin-top: 10px; color: #666; font-size: 14px; }
+        .no-results { text-align: center; padding: 40px; color: #dc3545; font-size: 18px; }
+        .grade-tabs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .grade-tab { padding: 10px 25px; background: #1a2526; color: #d4af37; text-decoration: none; border-radius: 30px; font-weight: bold; transition: all 0.3s; }
+        .grade-tab.active { background: #d4af37; color: #1a2526; }
+        .grade-tab:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body>
     <header class="main-header">
         <img src="logo.png" alt="شعار المعهد" class="logo">
-        <h1>تسجيل الحضور والغياب - الصف الأول</h1>
+        <h1>🎓 تسجيل الحضور والغياب - الصف الأول</h1>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </header>
 
     <div class="admin-container">
-        <!-- أزرار التنقل بين الصفوف -->
         <div class="grade-tabs">
             <a href="attendance-first.html" class="grade-tab active">🎓 الصف الأول</a>
             <a href="attendance-second.html" class="grade-tab">📚 الصف الثاني</a>
             <a href="attendance-third.html" class="grade-tab">📖 الصف الثالث</a>
         </div>
 
-        <!-- باقي محتوى صفحة الحضور (نفس attendance.html) -->
         <div class="summary-card">
             <h3>📊 ملخص الحضور لليوم - الصف الأول</h3>
             <div class="summary-stats" id="summaryStats">
-                <div class="stat-box">
-                    <div class="stat-number" id="totalCount">0</div>
-                    <div class="stat-label">إجمالي الطلاب</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="presentCount">0</div>
-                    <div class="stat-label">✅ حاضرون</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="absentCount">0</div>
-                    <div class="stat-label">❌ غائبون</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="lateCount">0</div>
-                    <div class="stat-label">⏰ متأخرون</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="presentPercentage">0%</div>
-                    <div class="stat-label">نسبة الحضور</div>
-                </div>
+                <div class="stat-box"><div class="stat-number" id="totalCount">0</div><div class="stat-label">إجمالي الطلاب</div></div>
+                <div class="stat-box"><div class="stat-number" id="presentCount">0</div><div class="stat-label">✅ حاضرون</div></div>
+                <div class="stat-box"><div class="stat-number" id="absentCount">0</div><div class="stat-label">❌ غائبون</div></div>
+                <div class="stat-box"><div class="stat-number" id="lateCount">0</div><div class="stat-label">⏰ متأخرون</div></div>
+                <div class="stat-box"><div class="stat-number" id="presentPercentage">0%</div><div class="stat-label">نسبة الحضور</div></div>
             </div>
         </div>
 
@@ -96,17 +82,8 @@
 
         <div class="attendance-table">
             <div class="table-wrapper">
-                <td>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>رقم الجلوس</th>
-                            <th>اسم الطالب</th>
-                            <th>الحالة</th>
-                            <th>ملاحظة</th>
-                            <th>إجراء</th>
-                        </tr>
-                    </thead>
+                <table id="attendanceTable">
+                    <thead><tr><th>#</th><th>رقم الجلوس</th><th>اسم الطالب</th><th>الحالة</th><th>ملاحظة</th><th>إجراء</th></tr></thead>
                     <tbody id="attendance-table-body"></tbody>
                 </table>
             </div>
@@ -118,10 +95,8 @@
     </div>
 
     <script>
-        const GRADE = 'first'; // first, second, third
-        let students = [];
-        let filteredStudents = [];
-        let attendanceRecords = {};
+        const GRADE = 'first';
+        let students = [], filteredStudents = [], attendanceRecords = {};
         let currentDate = new Date().toISOString().split('T')[0];
 
         async function loadStudents() {
@@ -132,10 +107,7 @@
                 document.getElementById('attendance-date').value = currentDate;
                 await loadAttendance();
                 updateSearchInfo();
-            } catch (error) {
-                console.error('Error loading students:', error);
-                showToast('خطأ في تحميل بيانات الطلاب', 'error');
-            }
+            } catch (error) { showToast('خطأ في تحميل بيانات الطلاب', 'error'); }
         }
 
         async function loadAttendance() {
@@ -144,46 +116,28 @@
                 const response = await fetch(`/api/attendance/${currentDate}`);
                 const records = await response.json();
                 attendanceRecords = {};
-                records.forEach(record => {
-                    attendanceRecords[record.studentCode] = record;
-                });
+                records.forEach(record => { attendanceRecords[record.studentCode] = record; });
                 renderAttendanceTable();
                 updateSummary();
-            } catch (error) {
-                console.error('Error loading attendance:', error);
-            }
+            } catch (error) { console.error('Error loading attendance:', error); }
         }
 
         function filterStudents() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (searchTerm === '') {
-                filteredStudents = [...students];
-            } else {
-                filteredStudents = students.filter(student => 
-                    student.fullName.toLowerCase().includes(searchTerm) ||
-                    student.studentCode.toLowerCase().includes(searchTerm)
-                );
-            }
+            filteredStudents = searchTerm === '' ? [...students] : students.filter(s => s.fullName.toLowerCase().includes(searchTerm) || s.studentCode.toLowerCase().includes(searchTerm));
             renderAttendanceTable();
             updateSearchInfo();
         }
 
         function updateSearchInfo() {
             const searchInfo = document.getElementById('searchInfo');
-            if (filteredStudents.length === students.length) {
-                searchInfo.innerHTML = `📋 عرض كل طلاب الصف (${students.length} طالب)`;
-            } else {
-                searchInfo.innerHTML = `🔍 تم العثور على ${filteredStudents.length} طالب من أصل ${students.length}`;
-            }
+            searchInfo.innerHTML = filteredStudents.length === students.length ? `📋 عرض كل طلاب الصف (${students.length} طالب)` : `🔍 تم العثور على ${filteredStudents.length} طالب من أصل ${students.length}`;
         }
 
         function renderAttendanceTable() {
             const tbody = document.getElementById('attendance-table-body');
             tbody.innerHTML = '';
-            if (filteredStudents.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="no-results">لا توجد طلاب في هذا الصف</td></tr>`;
-                return;
-            }
+            if (filteredStudents.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="no-results">🚫 لا توجد طلاب في هذا الصف</td></tr>`; return; }
             filteredStudents.forEach((student, index) => {
                 const record = attendanceRecords[student.studentCode];
                 const status = record ? record.status : 'present';
@@ -193,14 +147,8 @@
                     <td>${index + 1}</td>
                     <td>${student.studentCode}</td>
                     <td>${student.fullName}</td>
-                    <td>
-                        <select class="status-select" data-code="${student.studentCode}">
-                            <option value="present" ${status === 'present' ? 'selected' : ''}>✅ حاضر</option>
-                            <option value="absent" ${status === 'absent' ? 'selected' : ''}>❌ غائب</option>
-                            <option value="late" ${status === 'late' ? 'selected' : ''}>⏰ متأخر</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="note-input" data-code="${student.studentCode}" value="${escapeHtml(note)}" placeholder="ملاحظة"></td>
+                    <td><select class="status-select" data-code="${student.studentCode}"><option value="present" ${status === 'present' ? 'selected' : ''}>✅ حاضر</option><option value="absent" ${status === 'absent' ? 'selected' : ''}>❌ غائب</option><option value="late" ${status === 'late' ? 'selected' : ''}>⏰ متأخر</option></select></td>
+                    <td><input type="text" class="note-input" data-code="${student.studentCode}" value="${escapeHtml(note)}" placeholder="ملاحظة" style="width:100%;padding:5px;"></td>
                     <td><button class="btn-attendance" onclick="updateSingle('${student.studentCode}')"><i class="fas fa-save"></i> حفظ</button></td>
                 `;
                 tbody.appendChild(row);
@@ -216,13 +164,14 @@
             const data = { studentCode, studentName: student.fullName, date: currentDate, status: select.value, note: noteInput?.value || '', recordedBy: 'admin' };
             try {
                 const response = await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                if (response.ok) { showToast('تم حفظ الحضور بنجاح', 'success'); await loadAttendance(); }
-            } catch (error) { showToast('خطأ في حفظ الحضور', 'error'); }
+                if (response.ok) { showToast('✅ تم حفظ الحضور بنجاح', 'success'); await loadAttendance(); }
+                else showToast('❌ خطأ في حفظ الحضور', 'error');
+            } catch (error) { showToast('❌ خطأ في الاتصال', 'error'); }
         };
 
         window.bulkUpdate = function(status) {
             document.querySelectorAll('.status-select').forEach(select => select.value = status);
-            showToast(`تم تغيير جميع الطلاب إلى ${status === 'present' ? 'حاضر' : status === 'absent' ? 'غائب' : 'متأخر'}`, 'info');
+            showToast(`✅ تم تغيير جميع الطلاب إلى ${status === 'present' ? 'حاضر' : status === 'absent' ? 'غائب' : 'متأخر'}`, 'info');
         };
 
         window.saveAttendance = async function() {
@@ -234,8 +183,8 @@
             });
             try {
                 const response = await fetch('/api/attendance/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: currentDate, students: updates, recordedBy: 'admin' }) });
-                if (response.ok) { showToast('تم حفظ جميع تغييرات الحضور بنجاح', 'success'); await loadAttendance(); }
-            } catch (error) { showToast('خطأ في حفظ التغييرات', 'error'); }
+                if (response.ok) { showToast('✅ تم حفظ جميع تغييرات الحضور بنجاح', 'success'); await loadAttendance(); }
+            } catch (error) { showToast('❌ خطأ في حفظ التغييرات', 'error'); }
         };
 
         function updateSummary() {
@@ -255,7 +204,7 @@
 
         function showToast(message, type) {
             const bg = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107';
-            Toastify({ text: message, duration: 3000, gravity: 'top', position: 'right', backgroundColor: bg }).showToast();
+            Toastify({ text: message, duration: 3000, gravity: 'top', position: 'right', backgroundColor: bg, stopOnFocus: true }).showToast();
         }
 
         window.logout = function() { localStorage.removeItem('loggedInUser'); window.location.href = 'login.html'; };
