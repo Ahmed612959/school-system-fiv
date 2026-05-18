@@ -30,8 +30,8 @@
                     <input type="text" id="search-name" name="student-name" placeholder="أدخل اسم الطالب" required>
                 </div>
                 <div class="input-group">
-                    <label for="search-id"> رقم الجلوس  </label>
-                    <input type="text" id="search-id" name="student-id" placeholder="أدخل رقم الجلوس " required>
+                    <label for="search-id">رقم الجلوس</label>
+                    <input type="text" id="search-id" name="student-id" placeholder="أدخل رقم الجلوس" required>
                 </div>
                 <button type="submit" class="submit-btn">عرض النتيجة</button>
             </form>
@@ -46,6 +46,59 @@
                     </div>
                     <div class="chart-container">
                         <canvas id="gradesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم إحصائيات الحضور والغياب -->
+            <section class="attendance-stats-section" id="attendanceStatsSection" style="display: none;">
+                <h2>📋 إحصائيات الحضور والغياب</h2>
+                <div class="attendance-stats-card">
+                    <div class="attendance-stats-grid">
+                        <div class="stat-card present">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="presentCount">0</div>
+                                <div class="stat-label">أيام الحضور</div>
+                            </div>
+                        </div>
+                        <div class="stat-card absent">
+                            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="absentCount">0</div>
+                                <div class="stat-label">أيام الغياب</div>
+                            </div>
+                        </div>
+                        <div class="stat-card late">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="lateCount">0</div>
+                                <div class="stat-label">أيام التأخير</div>
+                            </div>
+                        </div>
+                        <div class="stat-card percentage">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="attendancePercentage">0%</div>
+                                <div class="stat-label">نسبة الحضور</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="attendance-dates">
+                        <div class="date-card">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>📅 آخر يوم حضور:</span>
+                            <strong id="lastPresentDate">لم يتم تسجيل بعد</strong>
+                        </div>
+                        <div class="date-card">
+                            <i class="fas fa-calendar-times"></i>
+                            <span>📅 آخر يوم غياب:</span>
+                            <strong id="lastAbsentDate">لم يتم تسجيل بعد</strong>
+                        </div>
+                    </div>
+                    <div id="noAttendanceMessage" class="no-attendance-message" style="display: none;">
+                        <i class="fas fa-info-circle"></i>
+                        📌 لم يتم تسجيل أي حضور أو غياب لك حتى الآن. سيبدأ العد من أول مرة يتم تسجيل حضورك أو غيابك.
                     </div>
                 </div>
             </section>
