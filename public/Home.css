@@ -587,6 +587,7 @@ canvas#gradesChart {
     margin-top: 20px;
     border: 1px solid #d4af37;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: block !important;
 }
 
 .attendance-stats-section h2 {
@@ -594,6 +595,10 @@ canvas#gradesChart {
     font-size: 1.2rem;
     margin-bottom: 15px;
     text-align: center;
+}
+
+.attendance-stats-card {
+    display: block;
 }
 
 .attendance-stats-grid {
@@ -679,6 +684,7 @@ canvas#gradesChart {
     border-radius: 10px;
     color: #856404;
     margin-top: 15px;
+    display: block !important;
 }
 
 .no-attendance-message i {
