@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // الرابط حسب البيئة (محلي أو منشور)
     const BASE_URL = window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' 
-        : 'https://schoolx-five.vercel.app';
+        : 'https://school-system-fiv.vercel.app';
 
     console.log('🌐 BASE_URL:', BASE_URL);
 
