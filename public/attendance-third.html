@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الحضور - الصف الثالث | معهد رعاية الضبعية</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+        .attendance-table { width: 100%; overflow-x: auto; }
+        .attendance-table table { width: 100%; border-collapse: collapse; }
+        .attendance-table th, .attendance-table td { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; }
+        .attendance-table th { background: #1a2526; color: #d4af37; }
+        .btn-attendance { background: #d4af37; color: #1a2526; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin: 0 5px; }
+        .btn-attendance:hover { background: #1a2526; color: #d4af37; }
+        .date-picker { text-align: center; margin-bottom: 20px; }
+        .date-picker input { padding: 10px; font-size: 16px; border: 2px solid #d4af37; border-radius: 8px; }
+        .summary-card { background: linear-gradient(135deg, #1a2526, #2f3b3c); color: #d4af37; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .summary-stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .stat-box { text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; min-width: 120px; }
+        .stat-number { font-size: 28px; font-weight: bold; }
+        .stat-label { font-size: 14px; }
+        .bulk-buttons { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .bulk-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .bulk-present { background: #28a745; color: white; }
+        .bulk-absent { background: #dc3545; color: white; }
+        .bulk-late { background: #ffc107; color: #1a2526; }
+        .search-section { margin-bottom: 20px; text-align: center; }
+        .search-input { width: 100%; max-width: 400px; padding: 12px 20px; border: 2px solid #d4af37; border-radius: 30px; font-size: 16px; outline: none; }
+        .search-input:focus { border-color: #1a2526; box-shadow: 0 0 10px rgba(212,175,55,0.3); }
+        .search-info { margin-top: 10px; color: #666; font-size: 14px; }
+        .no-results { text-align: center; padding: 40px; color: #dc3545; font-size: 18px; }
+        .grade-tabs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .grade-tab { padding: 10px 25px; background: #1a2526; color: #d4af37; text-decoration: none; border-radius: 30px; font-weight: bold; transition: all 0.3s; }
+        .grade-tab.active { background: #d4af37; color: #1a2526; }
+        .grade-tab:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <img src="logo.png" alt="شعار المعهد" class="logo">
+        <h1>📖 تسجيل الحضور والغياب - الصف الثالث</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </header>
+
+    <div class="admin-container">
+        <div class="grade-tabs">
+            <a href="attendance-first.html" class="grade-tab">🎓 الصف الأول</a>
+            <a href="attendance-second.html" class="grade-tab">📚 الصف الثاني</a>
+            <a href="attendance-third.html" class="grade-tab active">📖 الصف الثالث</a>
+        </div>
+
+        <div class="summary-card">
+            <h3>📊 ملخص الحضور لليوم -
