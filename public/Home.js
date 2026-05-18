@@ -233,6 +233,28 @@ document.addEventListener('DOMContentLoaded', async function() {
         else percentageEl.style.color = '#dc3545';
     }
 
+
+    // دالة لتحديث البيانات من السيرفر
+async function refreshAttendanceData() {
+    const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+    if (!user || user.type !== 'student') return;
+    
+    const student = students.find(s => s.username === user.username);
+    if (!student) return;
+    
+    showToast('🔄 جاري تحديث بيانات الحضور...', 'info');
+    
+    // إعادة جلب إحصائيات الحضور
+    await fetchAttendanceStats(student.studentCode);
+    renderAttendanceStats();
+    
+    showToast('✅ تم تحديث بيانات الحضور بنجاح', 'success');
+}
+
+// ربط زر التحديث
+document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refreshAttendanceData);
+    
+
     function calculateClassAverage() {
         const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
         if (!studentsWithGrades.length) return 0;
