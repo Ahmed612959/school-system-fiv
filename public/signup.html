@@ -30,7 +30,14 @@
                     <label for="password">كلمة المرور</label>
                     <input type="password" id="password" name="password" placeholder="أدخل كلمة مرور قوية" required>
                 </div>
-
+<div class="input-group">
+    <label for="grade">الصف الدراسي <span class="required">*</span></label>
+    <select id="grade" name="grade" required>
+        <option value="first">الصف الأول الثانوي</option>
+        <option value="second">الصف الثاني الثانوي</option>
+        <option value="third">الصف الثالث الثانوي</option>
+    </select>
+</div>
                 <div class="input-group">
                     <label for="studentCode">آخر 7 أرقام من بطاقة الطالب أو شهادة الميلاد</label>
                     <input type="text" id="studentCode" name="studentCode" inputmode="numeric" maxlength="7" placeholder="أدخل آخر 7 أرقام" required>
