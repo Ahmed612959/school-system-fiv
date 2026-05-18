@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     console.log('🌐 BASE_URL:', BASE_URL);
 
-    // دالة جلب البيانات موحدة
     async function getFromServer(endpoint) {
         try {
             let cleanEndpoint = endpoint.split('/api/').pop() || endpoint;
@@ -83,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         ).join('');
     }
 
-    // ====================== المواد والدرجات النهائية ======================
+    // المواد والدرجات النهائية
     const subjectMaxGrades = {
         "اللغة العربية": 20,
         "اللغة الإنجليزية": 20,
@@ -94,8 +93,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         "الدين": 30
     };
     const TOTAL_POSSIBLE = 174;
-
-    // ترتيب المواد للعرض
     const orderedSubjects = [
         "اللغة العربية",
         "اللغة الإنجليزية",
@@ -141,14 +138,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchAttendanceStats(studentCode) {
         try {
             console.log('🔄 Fetching attendance for student:', studentCode);
-            const response = await fetch(`${BASE_URL}/api/attendance/student/${studentCode}`);
+            const response = await fetch(`${BASE_URL}/api/attendance/student/${studentCode}?t=${Date.now()}`);
             if (response.ok) {
                 attendanceRecords = await response.json();
                 console.log('📊 Attendance records:', attendanceRecords);
                 
                 if (attendanceRecords.length === 0) {
                     attendanceStats = null;
-                    console.log('⚠️ No attendance records found');
                     return null;
                 }
                 
@@ -170,7 +166,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                     lastPresentDate: lastPresent ? formatDate(lastPresent.date) : null,
                     lastAbsentDate: lastAbsent ? formatDate(lastAbsent.date) : null
                 };
-                console.log('✅ Attendance stats:', attendanceStats);
                 return attendanceStats;
             }
             return null;
@@ -191,10 +186,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     function renderAttendanceStats() {
         const section = document.getElementById('attendanceStatsSection');
-        if (!section) {
-            console.log('❌ attendanceStatsSection not found in DOM');
-            return;
-        }
+        if (!section) return;
         
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         if (!user || user.type !== 'student') {
@@ -233,27 +225,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         else percentageEl.style.color = '#dc3545';
     }
 
-
-    // دالة لتحديث البيانات من السيرفر
-async function refreshAttendanceData() {
-    const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
-    if (!user || user.type !== 'student') return;
-    
-    const student = students.find(s => s.username === user.username);
-    if (!student) return;
-    
-    showToast('🔄 جاري تحديث بيانات الحضور...', 'info');
-    
-    // إعادة جلب إحصائيات الحضور
-    await fetchAttendanceStats(student.studentCode);
-    renderAttendanceStats();
-    
-    showToast('✅ تم تحديث بيانات الحضور بنجاح', 'success');
-}
-
-// ربط زر التحديث
-document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refreshAttendanceData);
-    
+    // دالة تحديث يدوي
+    async function refreshAttendanceData() {
+        const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+        if (!user || user.type !== 'student') return;
+        
+        const student = students.find(s => s.username === user.username);
+        if (!student) return;
+        
+        showToast('🔄 جاري تحديث بيانات الحضور...', 'info');
+        await fetchAttendanceStats(student.studentCode);
+        renderAttendanceStats();
+        showToast('✅ تم تحديث بيانات الحضور بنجاح', 'success');
+    }
 
     function calculateClassAverage() {
         const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
@@ -263,6 +247,7 @@ document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refre
         return sum / percentages.length;
     }
 
+    // ====================== دالة renderDashboard الرئيسية ======================
     function renderDashboard() {
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         const dashboard = document.getElementById('dashboard');
@@ -320,7 +305,6 @@ document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refre
         }
         
         // جلب إحصائيات الحضور للطالب
-        console.log('🔄 Fetching attendance for student:', student.studentCode);
         fetchAttendanceStats(student.studentCode).then(() => {
             renderAttendanceStats();
         });
@@ -436,10 +420,31 @@ document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refre
         }).showToast();
     }
 
+    // ربط زر التحديث
+    document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refreshAttendanceData);
+
+    // تشغيل التحديث التلقائي كل 30 ثانية
+    let refreshInterval;
+    function startAutoRefresh() {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+            if (user && user.type === 'student') {
+                const student = students.find(s => s.username === user.username);
+                if (student) {
+                    fetchAttendanceStats(student.studentCode).then(() => {
+                        renderAttendanceStats();
+                    });
+                }
+            }
+        }, 30000);
+    }
+
     // تنفيذ كل حاجة بالترتيب الصحيح
     await loadInitialData();
     renderNavbar();
     renderWelcomeMessage();
     await renderNotifications();
     renderDashboard();
+    startAutoRefresh();
 });
