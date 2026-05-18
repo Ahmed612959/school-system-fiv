@@ -45,15 +45,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         tableBody.innerHTML = '';
         if (notifications.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا<\/td></tr>';
             return;
         }
 
         notifications.forEach(n => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${n.text || 'إشعار بدون نص'}</td>
-                <td>${n.date || 'غير محدد'}</td>
+                <td>${n.text || 'إشعار بدون نص'}<\/td>
+                <td>${n.date || 'غير محدد'}<\/td>
             `;
             tableBody.appendChild(row);
         });
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         navBar.innerHTML = links.map(l => 
-            `<a href="${l.href}" title="${l.title}"><i class="${l.icon}"></i></a>`
+            `<a href="${l.href}" title="${l.title}"><i class="${l.icon}"><\/i></a>`
         ).join('');
     }
 
@@ -106,23 +106,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         "الدين"
     ];
 
-    // حساب النسبة المئوية للطالب
     function calculateStudentPercentage(student) {
         if (!student.subjects || student.subjects.length === 0) return 0;
-        
         let totalEarned = 0;
-        
         student.subjects.forEach(subject => {
             totalEarned += subject.grade || 0;
         });
-        
         return (totalEarned / TOTAL_POSSIBLE) * 100;
     }
     
-    // حساب المجموع الكلي للطالب
     function calculateStudentTotal(student) {
         if (!student.subjects) return 0;
-        
         let total = 0;
         student.subjects.forEach(subject => {
             total += subject.grade || 0;
@@ -130,16 +124,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         return total;
     }
 
-    // الحصول على قائمة المواد مع الدرجات
     function getStudentSubjectsWithGrades(student) {
         const result = [];
-        
         orderedSubjects.forEach(subjName => {
             const subject = student.subjects?.find(s => s.name === subjName);
             const grade = subject ? (subject.grade || 0) : 0;
             result.push({ name: subjName, grade: grade, max: subjectMaxGrades[subjName] });
         });
-        
         return result;
     }
 
@@ -147,15 +138,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     let attendanceStats = null;
     let attendanceRecords = [];
 
-    // جلب إحصائيات الحضور للطالب
     async function fetchAttendanceStats(studentCode) {
         try {
+            console.log('🔄 Fetching attendance for student:', studentCode);
             const response = await fetch(`${BASE_URL}/api/attendance/student/${studentCode}`);
             if (response.ok) {
                 attendanceRecords = await response.json();
+                console.log('📊 Attendance records:', attendanceRecords);
                 
                 if (attendanceRecords.length === 0) {
                     attendanceStats = null;
+                    console.log('⚠️ No attendance records found');
                     return null;
                 }
                 
@@ -165,9 +158,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const total = attendanceRecords.length;
                 const percentage = total > 0 ? (present / total) * 100 : 0;
                 
-                // آخر يوم حضور (أحدث تاريخ)
                 const lastPresent = attendanceRecords.filter(a => a.status === 'present').sort((a,b) => new Date(b.date) - new Date(a.date))[0];
-                // آخر يوم غياب (أحدث تاريخ)
                 const lastAbsent = attendanceRecords.filter(a => a.status === 'absent').sort((a,b) => new Date(b.date) - new Date(a.date))[0];
                 
                 attendanceStats = {
@@ -179,6 +170,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     lastPresentDate: lastPresent ? formatDate(lastPresent.date) : null,
                     lastAbsentDate: lastAbsent ? formatDate(lastAbsent.date) : null
                 };
+                console.log('✅ Attendance stats:', attendanceStats);
                 return attendanceStats;
             }
             return null;
@@ -188,7 +180,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // تنسيق التاريخ (YYYY-MM-DD إلى 2025-01-15)
     function formatDate(dateStr) {
         if (!dateStr) return null;
         const parts = dateStr.split('-');
@@ -198,10 +189,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         return dateStr;
     }
 
-    // عرض إحصائيات الحضور في الصفحة
     function renderAttendanceStats() {
         const section = document.getElementById('attendanceStatsSection');
-        if (!section) return;
+        if (!section) {
+            console.log('❌ attendanceStatsSection not found in DOM');
+            return;
+        }
         
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         if (!user || user.type !== 'student') {
@@ -212,15 +205,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!attendanceStats) {
             section.style.display = 'block';
             document.getElementById('noAttendanceMessage').style.display = 'block';
-            document.querySelector('.attendance-stats-grid').style.display = 'none';
-            document.querySelector('.attendance-dates').style.display = 'none';
+            const grid = document.querySelector('.attendance-stats-grid');
+            const dates = document.querySelector('.attendance-dates');
+            if (grid) grid.style.display = 'none';
+            if (dates) dates.style.display = 'none';
             return;
         }
         
         section.style.display = 'block';
         document.getElementById('noAttendanceMessage').style.display = 'none';
-        document.querySelector('.attendance-stats-grid').style.display = 'grid';
-        document.querySelector('.attendance-dates').style.display = 'flex';
+        const grid = document.querySelector('.attendance-stats-grid');
+        const dates = document.querySelector('.attendance-dates');
+        if (grid) grid.style.display = 'grid';
+        if (dates) dates.style.display = 'flex';
         
         document.getElementById('presentCount').textContent = attendanceStats.present;
         document.getElementById('absentCount').textContent = attendanceStats.absent;
@@ -229,7 +226,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('lastPresentDate').innerHTML = attendanceStats.lastPresentDate || 'لم يتم تسجيل بعد';
         document.getElementById('lastAbsentDate').innerHTML = attendanceStats.lastAbsentDate || 'لم يتم تسجيل بعد';
         
-        // تغيير لون نسبة الحضور
         const percentageEl = document.getElementById('attendancePercentage');
         const percentageValue = parseFloat(attendanceStats.percentage);
         if (percentageValue >= 90) percentageEl.style.color = '#28a745';
@@ -237,11 +233,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         else percentageEl.style.color = '#dc3545';
     }
 
+    function calculateClassAverage() {
+        const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
+        if (!studentsWithGrades.length) return 0;
+        const percentages = studentsWithGrades.map(s => calculateStudentPercentage(s));
+        const sum = percentages.reduce((a, b) => a + b, 0);
+        return sum / percentages.length;
+    }
+
     function renderDashboard() {
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         const dashboard = document.getElementById('dashboard');
         if (!dashboard || !user || user.type !== 'student') {
             if (dashboard) dashboard.style.display = 'none';
+            const section = document.getElementById('attendanceStatsSection');
+            if (section) section.style.display = 'none';
             return;
         }
 
@@ -292,18 +298,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // جلب إحصائيات الحضور للطالب
+        console.log('🔄 Fetching attendance for student:', student.studentCode);
         fetchAttendanceStats(student.studentCode).then(() => {
             renderAttendanceStats();
         });
-    }
-
-    function calculateClassAverage() {
-        const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
-        if (!studentsWithGrades.length) return 0;
-        
-        const percentages = studentsWithGrades.map(s => calculateStudentPercentage(s));
-        const sum = percentages.reduce((a, b) => a + b, 0);
-        return sum / percentages.length;
     }
 
     // البحث عن الطالب
@@ -328,16 +326,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderStudentResult(student, resultBody, violationsBody);
             showToast('✅ تم العثور على الطالب بنجاح!', 'success');
         } else {
-            resultBody.innerHTML = '<tr><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!</td></tr>';
-            violationsBody.innerHTML = '<tr><td colspan="5">❌ لا توجد نتيجة!</td></tr>';
+            resultBody.innerHTML = '<td><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!<\/td></tr>';
+            violationsBody.innerHTML = '<tr><td colspan="5">❌ لا توجد نتيجة!<\/td></tr>';
             showToast('❌ الطالب غير موجود! تأكد من رقم الجلوس', 'error');
         }
     });
 
     function renderStudentResult(student, resultBody, violationsBody) {
         if (!student.subjects || student.subjects.length === 0) {
-            resultBody.innerHTML = '<tr><td colspan="4">📭 لا توجد درجات مسجلة لهذا الطالب</td></tr>';
-            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات</td></tr>';
+            resultBody.innerHTML = '<tr><td colspan="4">📭 لا توجد درجات مسجلة لهذا الطالب<\/td></tr>';
+            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات<\/td></tr>';
             return;
         }
 
@@ -349,7 +347,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         else if (percentage >= 60) percentageClass = 'medium-percentage';
         else percentageClass = 'low-percentage';
 
-        // الحصول على المواد مع الدرجات
         const subjectsWithGrades = getStudentSubjectsWithGrades(student);
         
         const labels = ['الاسم', 'رقم الجلوس', ...subjectsWithGrades.map(s => s.name)];
@@ -357,28 +354,27 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         resultBody.innerHTML = `
             <tr>
-                <td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}</td>
-                <td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}</td>
-                <td>${total} / ${TOTAL_POSSIBLE}</td>
-                <td class="${percentageClass}">${percentage.toFixed(1)}%</td>
+                <td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}<\/td>
+                <td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}<\/td>
+                <td>${total} / ${TOTAL_POSSIBLE}<\/td>
+                <td class="${percentageClass}">${percentage.toFixed(1)}%<\/td>
             </tr>
         `;
 
-        // المخالفات الخاصة بالطالب
         const studentVios = violations.filter(v => v.studentId === student.studentCode);
         
         if (studentVios.length > 0) {
             violationsBody.innerHTML = studentVios.map(v => `
                 <tr>
-                    <td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
-                    <td>${v.reason}</td>
-                    <td>${v.penalty}</td>
-                    <td>${v.parentSummons ? '✅ نعم' : '❌ لا'}</td>
-                    <td>${v.date}</td>
+                    <td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td>
+                    <td>${v.reason}<\/td>
+                    <td>${v.penalty}<\/td>
+                    <td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td>
+                    <td>${v.date}<\/td>
                 </tr>
             `).join('');
         } else {
-            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة</td></tr>';
+            violationsBody.innerHTML = '<td><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td></tr>';
         }
     }
 
