@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     console.log('🌐 BASE_URL:', BASE_URL);
 
+    // دالة جلب البيانات موحدة
     async function getFromServer(endpoint) {
         try {
             let cleanEndpoint = endpoint.split('/api/').pop() || endpoint;
@@ -44,15 +45,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         tableBody.innerHTML = '';
         if (notifications.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا<\/td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا</td></tr>';
             return;
         }
 
         notifications.forEach(n => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${n.text || 'إشعار بدون نص'}<\/td>
-                <td>${n.date || 'غير محدد'}<\/td>
+                <td>${n.text || 'إشعار بدون نص'}</td>
+                <td>${n.date || 'غير محدد'}</td>
             `;
             tableBody.appendChild(row);
         });
@@ -78,11 +79,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         navBar.innerHTML = links.map(l => 
-            `<a href="${l.href}" title="${l.title}"><i class="${l.icon}"><\/i></a>`
+            `<a href="${l.href}" title="${l.title}"><i class="${l.icon}"></i></a>`
         ).join('');
     }
 
-    // المواد والدرجات النهائية
+    // ====================== المواد والدرجات النهائية ======================
     const subjectMaxGrades = {
         "اللغة العربية": 20,
         "اللغة الإنجليزية": 20,
@@ -93,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         "الدين": 30
     };
     const TOTAL_POSSIBLE = 174;
+
     const orderedSubjects = [
         "اللغة العربية",
         "اللغة الإنجليزية",
@@ -131,6 +133,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         return result;
     }
 
+    function calculateClassAverage() {
+        const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
+        if (!studentsWithGrades.length) return 0;
+        const percentages = studentsWithGrades.map(s => calculateStudentPercentage(s));
+        const sum = percentages.reduce((a, b) => a + b, 0);
+        return sum / percentages.length;
+    }
+
     // ====================== إحصائيات الحضور والغياب ======================
     let attendanceStats = null;
     let attendanceRecords = [];
@@ -141,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const response = await fetch(`${BASE_URL}/api/attendance/student/${studentCode}?t=${Date.now()}`);
             if (response.ok) {
                 attendanceRecords = await response.json();
-                console.log('📊 Attendance records:', attendanceRecords);
+                console.log('📊 Attendance records found:', attendanceRecords.length);
                 
                 if (attendanceRecords.length === 0) {
                     attendanceStats = null;
@@ -158,10 +168,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const lastAbsent = attendanceRecords.filter(a => a.status === 'absent').sort((a,b) => new Date(b.date) - new Date(a.date))[0];
                 
                 attendanceStats = {
-                    present,
-                    absent,
-                    late,
-                    total,
+                    present, absent, late, total,
                     percentage: percentage.toFixed(1),
                     lastPresentDate: lastPresent ? formatDate(lastPresent.date) : null,
                     lastAbsentDate: lastAbsent ? formatDate(lastAbsent.date) : null
@@ -225,30 +232,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         else percentageEl.style.color = '#dc3545';
     }
 
-    // دالة تحديث يدوي
-    async function refreshAttendanceData() {
-        const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
-        if (!user || user.type !== 'student') return;
-        
-        const student = students.find(s => s.username === user.username);
-        if (!student) return;
-        
-        showToast('🔄 جاري تحديث بيانات الحضور...', 'info');
-        await fetchAttendanceStats(student.studentCode);
-        renderAttendanceStats();
-        showToast('✅ تم تحديث بيانات الحضور بنجاح', 'success');
-    }
-
-    function calculateClassAverage() {
-        const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
-        if (!studentsWithGrades.length) return 0;
-        const percentages = studentsWithGrades.map(s => calculateStudentPercentage(s));
-        const sum = percentages.reduce((a, b) => a + b, 0);
-        return sum / percentages.length;
-    }
-
     // ====================== دالة renderDashboard الرئيسية ======================
-    function renderDashboard() {
+    async function renderDashboard() {
         const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
         const dashboard = document.getElementById('dashboard');
         if (!dashboard || !user || user.type !== 'student') {
@@ -305,9 +290,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // جلب إحصائيات الحضور للطالب
-        fetchAttendanceStats(student.studentCode).then(() => {
+        if (student && student.studentCode) {
+            await fetchAttendanceStats(student.studentCode);
             renderAttendanceStats();
-        });
+        }
     }
 
     // البحث عن الطالب
@@ -332,16 +318,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderStudentResult(student, resultBody, violationsBody);
             showToast('✅ تم العثور على الطالب بنجاح!', 'success');
         } else {
-            resultBody.innerHTML = '<td><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!<\/td></tr>';
-            violationsBody.innerHTML = '<tr><td colspan="5">❌ لا توجد نتيجة!<\/td></tr>';
+            resultBody.innerHTML = '<tr><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!</td></tr>';
+            violationsBody.innerHTML = '<tr><td colspan="5">❌ لا توجد نتيجة!</td></tr>';
             showToast('❌ الطالب غير موجود! تأكد من رقم الجلوس', 'error');
         }
     });
 
     function renderStudentResult(student, resultBody, violationsBody) {
         if (!student.subjects || student.subjects.length === 0) {
-            resultBody.innerHTML = '<tr><td colspan="4">📭 لا توجد درجات مسجلة لهذا الطالب<\/td></tr>';
-            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات<\/td></tr>';
+            resultBody.innerHTML = '<tr><td colspan="4">📭 لا توجد درجات مسجلة لهذا الطالب</td></tr>';
+            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات</td></tr>';
             return;
         }
 
@@ -360,10 +346,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         resultBody.innerHTML = `
             <tr>
-                <td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}<\/td>
-                <td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}<\/td>
-                <td>${total} / ${TOTAL_POSSIBLE}<\/td>
-                <td class="${percentageClass}">${percentage.toFixed(1)}%<\/td>
+                <td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}</td>
+                <td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}</td>
+                <td>${total} / ${TOTAL_POSSIBLE}</td>
+                <td class="${percentageClass}">${percentage.toFixed(1)}%</td>
             </tr>
         `;
 
@@ -372,15 +358,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (studentVios.length > 0) {
             violationsBody.innerHTML = studentVios.map(v => `
                 <tr>
-                    <td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td>
-                    <td>${v.reason}<\/td>
-                    <td>${v.penalty}<\/td>
-                    <td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td>
-                    <td>${v.date}<\/td>
+                    <td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
+                    <td>${v.reason}</td>
+                    <td>${v.penalty}</td>
+                    <td>${v.parentSummons ? '✅ نعم' : '❌ لا'}</td>
+                    <td>${v.date}</td>
                 </tr>
             `).join('');
         } else {
-            violationsBody.innerHTML = '<td><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td></tr>';
+            violationsBody.innerHTML = '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة</td></tr>';
         }
     }
 
@@ -420,31 +406,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         }).showToast();
     }
 
-    // ربط زر التحديث
-    document.getElementById('refreshAttendanceBtn')?.addEventListener('click', refreshAttendanceData);
-
-    // تشغيل التحديث التلقائي كل 30 ثانية
-    let refreshInterval;
-    function startAutoRefresh() {
-        if (refreshInterval) clearInterval(refreshInterval);
-        refreshInterval = setInterval(() => {
-            const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
-            if (user && user.type === 'student') {
-                const student = students.find(s => s.username === user.username);
-                if (student) {
-                    fetchAttendanceStats(student.studentCode).then(() => {
-                        renderAttendanceStats();
-                    });
-                }
-            }
-        }, 30000);
-    }
-
     // تنفيذ كل حاجة بالترتيب الصحيح
     await loadInitialData();
     renderNavbar();
     renderWelcomeMessage();
     await renderNotifications();
-    renderDashboard();
-    startAutoRefresh();
+    await renderDashboard();
 });
