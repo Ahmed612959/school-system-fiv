@@ -124,6 +124,7 @@ document.getElementById('student-signup-form')?.addEventListener('submit', async
     fullName,
     username,
     studentCode: studentCode,
+    grade: document.getElementById('grade').value, // 👈 أضف هذا    
     phone,
     parentName,
     parentId,
