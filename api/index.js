@@ -121,6 +121,20 @@ if (!MONGODB_URI) {
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 }
 
+
+// ====================== نموذج الحضور والغياب ======================
+const attendanceSchema = new mongoose.Schema({
+    studentCode: { type: String, required: true }, // رقم جلوس الطالب
+    studentName: { type: String, required: true }, // اسم الطالب
+    date: { type: String, required: true },        // التاريخ (YYYY-MM-DD)
+    status: { type: String, enum: ['present', 'absent', 'late'], default: 'present' }, // حاضر، غائب، متأخر
+    note: { type: String, default: '' },           // ملاحظة (مثال: مريض)
+    recordedBy: { type: String, default: '' }      // من سجل الحضور (أدمن)
+});
+
+const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
+
+
 // ====================== دوال مساعدة ======================
 function generateUniqueUsername(fullName, id, existingUsers) {
     let baseUsername = fullName.toLowerCase().replace(/\s+/g, '').slice(0, 10) + id.slice(-2);
@@ -635,6 +649,130 @@ app.post('/api/create-test-admin', async (req, res) => {
     } catch (error) {
         console.error('Error creating admin:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// ====================== API Routes - الحضور والغياب ======================
+
+// جلب سجل الحضور لكل الطلاب في تاريخ معين
+app.get('/api/attendance/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const attendance = await Attendance.find({ date });
+        res.json(attendance);
+    } catch (error) {
+        console.error('Error fetching attendance:', error);
+        res.status(500).json({ error: 'خطأ في جلب بيانات الحضور' });
+    }
+});
+
+// جلب سجل الحضور لطالب معين
+app.get('/api/attendance/student/:studentCode', async (req, res) => {
+    try {
+        const { studentCode } = req.params;
+        const attendance = await Attendance.find({ studentCode });
+        res.json(attendance);
+    } catch (error) {
+        console.error('Error fetching student attendance:', error);
+        res.status(500).json({ error: 'خطأ في جلب حضور الطالب' });
+    }
+});
+
+// تسجيل حضور/غياب لطالب
+app.post('/api/attendance', async (req, res) => {
+    try {
+        const { studentCode, studentName, date, status, note, recordedBy } = req.body;
+        
+        // التحقق من وجود سجل لنفس الطالب في نفس التاريخ
+        const existing = await Attendance.findOne({ studentCode, date });
+        
+        if (existing) {
+            // تحديث السجل الموجود
+            existing.status = status;
+            existing.note = note || '';
+            await existing.save();
+            return res.json({ message: 'تم تحديث الحضور بنجاح', attendance: existing });
+        }
+        
+        // إنشاء سجل جديد
+        const attendance = new Attendance({
+            studentCode,
+            studentName,
+            date,
+            status,
+            note: note || '',
+            recordedBy: recordedBy || 'admin'
+        });
+        
+        await attendance.save();
+        res.json({ message: 'تم تسجيل الحضور بنجاح', attendance });
+    } catch (error) {
+        console.error('Error saving attendance:', error);
+        res.status(500).json({ error: 'خطأ في تسجيل الحضور' });
+    }
+});
+
+// تسجيل حضور لعدة طلاب في وقت واحد (لكامل الفصل)
+app.post('/api/attendance/bulk', async (req, res) => {
+    try {
+        const { date, students, recordedBy } = req.body;
+        
+        let saved = 0;
+        let updated = 0;
+        
+        for (const student of students) {
+            const existing = await Attendance.findOne({ studentCode: student.code, date });
+            
+            if (existing) {
+                existing.status = student.status;
+                existing.note = student.note || '';
+                await existing.save();
+                updated++;
+            } else {
+                const attendance = new Attendance({
+                    studentCode: student.code,
+                    studentName: student.name,
+                    date,
+                    status: student.status,
+                    note: student.note || '',
+                    recordedBy: recordedBy || 'admin'
+                });
+                await attendance.save();
+                saved++;
+            }
+        }
+        
+        res.json({ message: `تم تسجيل الحضور: ${saved} جديد، ${updated} تحديث`, saved, updated });
+    } catch (error) {
+        console.error('Error saving bulk attendance:', error);
+        res.status(500).json({ error: 'خطأ في تسجيل الحضور' });
+    }
+});
+
+// إحصائيات الحضور لطالب
+app.get('/api/attendance/stats/:studentCode', async (req, res) => {
+    try {
+        const { studentCode } = req.params;
+        const attendance = await Attendance.find({ studentCode });
+        
+        const total = attendance.length;
+        const present = attendance.filter(a => a.status === 'present').length;
+        const absent = attendance.filter(a => a.status === 'absent').length;
+        const late = attendance.filter(a => a.status === 'late').length;
+        
+        const percentage = total > 0 ? (present / total) * 100 : 0;
+        
+        res.json({
+            studentCode,
+            total,
+            present,
+            absent,
+            late,
+            percentage: percentage.toFixed(1)
+        });
+    } catch (error) {
+        console.error('Error fetching attendance stats:', error);
+        res.status(500).json({ error: 'خطأ في جلب إحصائيات الحضور' });
     }
 });
 
