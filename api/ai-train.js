@@ -1,15 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
-const mammoth = require('mammoth');
-const XLSX = require('xlsx');
 
-// مجلد رفع الملفات
-const UPLOAD_DIR = path.join(__dirname, '../public/uploads');
+// مجلد تخزين البيانات
 const VECTOR_DIR = path.join(__dirname, '../vector-store');
 
-// التأكد من وجود المجلدات
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// التأكد من وجود المجلد
 if (!fs.existsSync(VECTOR_DIR)) fs.mkdirSync(VECTOR_DIR, { recursive: true });
 
 // استخراج النص من PDF
@@ -19,32 +15,12 @@ async function extractTextFromPDF(filePath) {
     return data.text;
 }
 
-// استخراج النص من Word
-async function extractTextFromWord(filePath) {
-    const result = await mammoth.extractRawText({ path: filePath });
-    return result.value;
-}
-
-// استخراج النص من Excel
-function extractTextFromExcel(filePath) {
-    const workbook = XLSX.readFile(filePath);
-    let text = '';
-    workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        data.forEach(row => {
-            text += row.filter(cell => cell).join(' ') + '\n';
-        });
-    });
-    return text;
-}
-
 // استخراج النص من TXT
 function extractTextFromTXT(filePath) {
     return fs.readFileSync(filePath, 'utf-8');
 }
 
-// تقسيم النص إلى أجزاء صغيرة (chunks)
+// تقسيم النص إلى أجزاء صغيرة
 function chunkText(text, chunkSize = 500) {
     const sentences = text.split(/[.!?؟!]\s+/);
     const chunks = [];
@@ -62,7 +38,7 @@ function chunkText(text, chunkSize = 500) {
     return chunks;
 }
 
-// حفظ الأجزاء (vectores) في ملف
+// حفظ الأجزاء
 function saveChunks(chunks, fileName) {
     const vectorFile = path.join(VECTOR_DIR, `${fileName}.json`);
     let existingChunks = [];
@@ -71,7 +47,6 @@ function saveChunks(chunks, fileName) {
         existingChunks = JSON.parse(fs.readFileSync(vectorFile, 'utf-8'));
     }
     
-    // إضافة الأجزاء الجديدة مع رقم المعرف
     const newChunks = chunks.map((text, index) => ({
         id: `${fileName}_${Date.now()}_${index}`,
         text: text,
@@ -92,14 +67,10 @@ async function trainOnFile(filePath, fileName) {
         
         if (ext === '.pdf') {
             text = await extractTextFromPDF(filePath);
-        } else if (ext === '.docx') {
-            text = await extractTextFromWord(filePath);
-        } else if (ext === '.xlsx' || ext === '.xls') {
-            text = extractTextFromExcel(filePath);
         } else if (ext === '.txt') {
             text = extractTextFromTXT(filePath);
         } else {
-            throw new Error(`نوع الملف غير مدعوم: ${ext}`);
+            throw new Error(`نوع الملف غير مدعوم حالياً: ${ext}. استخدم PDF أو TXT.`);
         }
         
         const chunks = chunkText(text);
@@ -111,4 +82,4 @@ async function trainOnFile(filePath, fileName) {
     }
 }
 
-module.exports = { trainOnFile, extractTextFromPDF, extractTextFromWord, extractTextFromExcel, chunkText, saveChunks };
+module.exports = { trainOnFile };
