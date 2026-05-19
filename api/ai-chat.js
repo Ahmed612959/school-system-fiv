@@ -1,159 +1,199 @@
 const fs = require('fs');
 const path = require('path');
-const { pipeline } = require('@xenova/transformers');
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+const XLSX = require('xlsx');
+const axios = require('axios');
 
-const VECTOR_DIR = path.join(__dirname, 'vector-store');
+// ====================== إعدادات التخزين ======================
+const TRAINING_DIR = path.join(__dirname, 'training-data');
+if (!fs.existsSync(TRAINING_DIR)) fs.mkdirSync(TRAINING_DIR, { recursive: true });
 
-let embeddingModel = null;
+let trainingFiles = [];
 
-async function getEmbeddingModel() {
-    if (!embeddingModel) {
-        embeddingModel = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    }
-    return embeddingModel;
-}
-
-// حساب التشابه بين متجهين (Cosine Similarity)
-function cosineSimilarity(vecA, vecB) {
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < vecA.length; i++) {
-        dotProduct += vecA[i] * vecB[i];
-        normA += vecA[i] * vecA[i];
-        normB += vecB[i] * vecB[i];
-    }
-    
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-// تحميل جميع الأجزاء
-function loadAllChunks() {
-    let allChunks = [];
-    if (!fs.existsSync(VECTOR_DIR)) return [];
-    
-    const files = fs.readdirSync(VECTOR_DIR);
+// تحميل الملفات المدربة
+function loadTrainingFiles() {
+    if (!fs.existsSync(TRAINING_DIR)) return [];
+    const files = fs.readdirSync(TRAINING_DIR);
+    trainingFiles = [];
     for (const file of files) {
         if (file.endsWith('.json')) {
             try {
-                const chunks = JSON.parse(fs.readFileSync(path.join(VECTOR_DIR, file), 'utf-8'));
-                allChunks.push(...chunks);
-            } catch (e) {}
+                const data = JSON.parse(fs.readFileSync(path.join(TRAINING_DIR, file), 'utf-8'));
+                trainingFiles.push(data);
+            } catch(e) {}
         }
     }
-    return allChunks;
+    console.log(`📚 تم تحميل ${trainingFiles.length} ملف تدريب`);
+    return trainingFiles;
 }
 
-// البحث عن الأجزاء الأكثر تشابهاً
-async function searchSimilarChunks(questionEmbedding, chunks, limit = 5) {
-    const scored = chunks.map(chunk => ({
-        chunk: chunk,
-        score: cosineSimilarity(questionEmbedding, chunk.embedding)
-    }));
-    
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, limit).map(s => s.chunk);
-}
-
-// توليد إجابة ذكية جداً من السياق
-function generateSuperIntelligentAnswer(question, relevantChunks) {
-    if (relevantChunks.length === 0) {
-        return "⚠️ **عذراً، لم أجد معلومات كافية للإجابة على سؤالك**\n\n" +
-               "📌 **نصيحة:** تأكد من تدريب الذكاء الاصطناعي على ملفات تحتوي على هذه المعلومات.\n" +
-               "💡 يمكنك رفع ملفات PDF أو Word أو Excel تحتوي على معلومات عن المعهد.";
-    }
-    
-    const questionLower = question.toLowerCase();
-    let answer = '';
-    
-    // تحديد نوع السؤال وإضافة مقدمة مناسبة
-    if (questionLower.includes('ما هو') || questionLower.includes('ماذا')) {
-        answer = `📖 **تعريف ومعلومات:**\n\n`;
-    } else if (questionLower.includes('كيف')) {
-        answer = `🔧 **شرح الطريقة والخطوات:**\n\n`;
-    } else if (questionLower.includes('لماذا')) {
-        answer = `💡 **الأسباب والتحليل:**\n\n`;
-    } else if (questionLower.includes('قارن') || questionLower.includes('الفرق')) {
-        answer = `⚖️ **المقارنة والتحليل:**\n\n`;
-    } else {
-        answer = `📚 **إجابة على سؤالك:**\n\n`;
-    }
-    
-    // تجميع المعلومات من الأجزاء المتشابهة
-    const seen = new Set();
-    const uniqueChunks = [];
-    
-    for (const chunk of relevantChunks) {
-        const shortText = chunk.text.substring(0, 300);
-        if (!seen.has(shortText)) {
-            seen.add(shortText);
-            uniqueChunks.push(chunk);
+// البحث في الملفات المدربة
+function searchInTraining(query) {
+    const results = [];
+    for (const file of trainingFiles) {
+        const lines = file.content.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].toLowerCase().includes(query.toLowerCase())) {
+                const context = lines.slice(Math.max(0, i - 2), i + 3).join('\n');
+                results.push({
+                    fileName: file.name,
+                    context: context,
+                    score: 1
+                });
+                break;
+            }
         }
     }
-    
-    for (let i = 0; i < uniqueChunks.length; i++) {
-        const chunk = uniqueChunks[i];
-        answer += `**${i + 1}.** ${chunk.text}\n\n`;
+    return results;
+}
+
+// استخراج النص من الملفات
+async function extractTextFromPDF(filePath) {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+}
+
+async function extractTextFromWord(filePath) {
+    const result = await mammoth.extractRawText({ path: filePath });
+    return result.value;
+}
+
+function extractTextFromExcel(filePath) {
+    const workbook = XLSX.readFile(filePath);
+    let text = '';
+    workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        data.forEach(row => {
+            text += row.filter(cell => cell).join(' ') + '\n';
+        });
+    });
+    return text;
+}
+
+function extractTextFromTXT(filePath) {
+    return fs.readFileSync(filePath, 'utf-8');
+}
+
+// حفظ ملف مدرب
+function saveTrainingFile(fileName, content) {
+    const filePath = path.join(TRAINING_DIR, `${fileName}.json`);
+    const data = {
+        id: Date.now(),
+        name: fileName,
+        content: content,
+        timestamp: new Date().toISOString()
+    };
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    trainingFiles.push(data);
+    return data;
+}
+
+// تدريب على ملف
+async function trainOnFile(filePath, originalName) {
+    try {
+        const ext = path.extname(filePath).toLowerCase();
+        let text = '';
+        
+        if (ext === '.pdf') {
+            text = await extractTextFromPDF(filePath);
+        } else if (ext === '.docx') {
+            text = await extractTextFromWord(filePath);
+        } else if (ext === '.xlsx' || ext === '.xls') {
+            text = extractTextFromExcel(filePath);
+        } else if (ext === '.txt') {
+            text = extractTextFromTXT(filePath);
+        } else {
+            throw new Error(`نوع الملف غير مدعوم: ${ext}`);
+        }
+        
+        if (!text || text.length < 50) {
+            throw new Error('الملف لا يحتوي على نص كافي للتدريب');
+        }
+        
+        const fileName = originalName.replace(/\.[^/.]+$/, '');
+        saveTrainingFile(fileName, text);
+        
+        return { success: true, chunksCount: Math.ceil(text.length / 500), fileName: originalName };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
-    
-    // إضافة المصادر
-    const sources = [...new Set(uniqueChunks.map(c => c.source))];
-    answer += `\n---\n📁 **المصادر:** ${sources.join(', ')}`;
-    
-    // إضافة نسبة الثقة
-    const avgScore = relevantChunks.reduce((sum, c) => sum + (c.score || 0.5), 0) / relevantChunks.length;
-    const confidence = Math.min(99, Math.max(50, Math.round(avgScore * 100)));
-    
-    let confidenceText = '';
-    if (confidence >= 80) confidenceText = '🟢 **عالية جداً**';
-    else if (confidence >= 60) confidenceText = '🟡 **متوسطة**';
-    else confidenceText = '🟠 **منخفضة (قد تحتاج لمصادر إضافية)**';
-    
-    answer += `\n🎯 **نسبة الثقة:** ${confidence}% (${confidenceText})`;
-    
-    // إضافة نصيحة في حالة الثقة المنخفضة
-    if (confidence < 60) {
-        answer += `\n💡 **نصيحة:** قد تكون هناك معلومات أكثر دقة إذا قمت برفع ملفات إضافية عن هذا الموضوع.`;
+}
+
+// حذف جميع البيانات
+function clearAllData() {
+    const files = fs.readdirSync(TRAINING_DIR);
+    for (const file of files) {
+        if (file.endsWith('.json')) {
+            fs.unlinkSync(path.join(TRAINING_DIR, file));
+        }
     }
-    
-    return answer;
+    trainingFiles = [];
+    return { success: true, message: 'تم حذف جميع بيانات التدريب' };
+}
+
+// ====================== استخدام DeepSeek API ======================
+const DEEPSEEK_API_KEY = 'sk-b8d30e8ccf95428796c4bea23ab7fd55';
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+async function askDeepSeek(question, context) {
+    try {
+        const systemPrompt = `أنت مساعد ذكي لمعهد رعاية الضبعية للتمريض.
+رد باللغة العربية الفصحى أو العامية المصرية.
+كن دقيقاً ومفيداً وودوداً.
+
+المعلومات المتوفرة عن المعهد:
+${context || "لا توجد معلومات محددة عن هذا السؤال في قاعدة المعهد. استخدم معرفتك العامة للإجابة."}`;
+
+        const response = await axios.post(DEEPSEEK_API_URL, {
+            model: 'deepseek-chat',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: question }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+            stream: false
+        }, {
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('DeepSeek API error:', error.response?.data || error.message);
+        return "⚠️ عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي. حاول مرة أخرى.";
+    }
 }
 
 // الدالة الرئيسية للإجابة
 async function askQuestion(question) {
     try {
-        const allChunks = loadAllChunks();
+        loadTrainingFiles();
         
-        if (allChunks.length === 0) {
-            return "🤖 **مرحباً! أنا المساعد الذكي للمعهد**\n\n" +
-                   "⚠️ **لم يتم تدريبي بعد على أي معلومات.**\n\n" +
-                   "📌 **لبدء استخدامي:**\n" +
-                   "1. اذهب إلى صفحة إدارة الذكاء الاصطناعي\n" +
-                   "2. ارفع ملفات (PDF، Word، Excel) تحتوي على معلومات عن المعهد\n" +
-                   "3. سأتذكر كل المعلومات وأصبح قادراً على الإجابة على أسئلتك\n\n" +
-                   "💡 **أنواع الملفات المدعومة:** PDF, Word, Excel, TXT";
+        // البحث في الملفات المدربة
+        const searchResults = searchInTraining(question);
+        
+        let context = "";
+        if (searchResults.length > 0) {
+            context = "المعلومات المتوفرة في قاعدة المعهد:\n\n";
+            for (let i = 0; i < Math.min(searchResults.length, 3); i++) {
+                context += `من ملف "${searchResults[i].fileName}":\n${searchResults[i].context}\n\n`;
+            }
         }
         
-        // حساب متجه السؤال
-        const model = await getEmbeddingModel();
-        const questionResult = await model(question, { pooling: 'mean', normalize: true });
-        const questionEmbedding = Array.from(questionResult.data);
-        
-        // البحث عن الأجزاء المتشابهة
-        const relevantChunks = await searchSimilarChunks(questionEmbedding, allChunks, 5);
-        
-        // توليد الإجابة الذكية
-        const answer = generateSuperIntelligentAnswer(question, relevantChunks);
+        // استخدام DeepSeek للإجابة
+        const answer = await askDeepSeek(question, context);
         
         return answer;
     } catch (error) {
         console.error('Error:', error);
-        return `⚠️ **حدث خطأ تقني**\n\n` +
-               `📌 **الخطأ:** ${error.message}\n\n` +
-               `💡 **الحل:** حاول مرة أخرى أو تحقق من تشغيل السيرفر بشكل صحيح.`;
+        return "⚠️ حدث خطأ في معالجة السؤال. حاول مرة أخرى.";
     }
 }
 
-module.exports = { askQuestion, loadAllChunks };
+module.exports = { trainOnFile, clearAllData, askQuestion, loadTrainingFiles };
