@@ -50,11 +50,11 @@ function generateResponse(question, relevantChunks) {
         return "⚠️ عذراً، لم أجد معلومات كافية للإجابة على سؤالك. تأكد من تدريب الذكاء الاصطناعي على ملفات تحتوي على هذه المعلومات.";
     }
     
-    let answer = `📚 بناءً على المعلومات المتوفرة:\n\n`;
+    let answer = `📚 بناءً على المعلومات المتوفرة في قاعدة المعهد:\n\n`;
     
     for (let i = 0; i < Math.min(relevantChunks.length, 3); i++) {
-        answer += `${i + 1}. ${relevantChunks[i].text.substring(0, 300)}`;
-        if (relevantChunks[i].text.length > 300) answer += '...';
+        answer += `${i + 1}. ${relevantChunks[i].text.substring(0, 350)}`;
+        if (relevantChunks[i].text.length > 350) answer += '...';
         answer += `\n\n`;
     }
     
@@ -69,7 +69,7 @@ async function askQuestion(question) {
         const allChunks = loadAllChunks();
         
         if (allChunks.length === 0) {
-            return "⚠️ لم يتم تدريب الذكاء الاصطناعي على أي ملفات بعد. يرجى رفع ملفات (PDF أو TXT) من صفحة الإدارة أولاً.";
+            return "⚠️ لم يتم تدريب الذكاء الاصطناعي على أي ملفات بعد.\n\n📌 يرجى من المدير رفع ملفات (PDF, Word, Excel, أو TXT) من صفحة إدارة الذكاء الاصطناعي أولاً.";
         }
         
         const relevantChunks = searchSimilarChunks(question, allChunks);
