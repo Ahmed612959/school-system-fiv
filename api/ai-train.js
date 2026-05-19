@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+const XLSX = require('xlsx');
 
 // مجلد تخزين البيانات
 const VECTOR_DIR = path.join(__dirname, '../vector-store');
@@ -15,13 +17,44 @@ async function extractTextFromPDF(filePath) {
     return data.text;
 }
 
+// استخراج النص من Word
+async function extractTextFromWord(filePath) {
+    try {
+        const result = await mammoth.extractRawText({ path: filePath });
+        return result.value;
+    } catch (error) {
+        console.error('Word extraction error:', error);
+        return '';
+    }
+}
+
+// استخراج النص من Excel
+function extractTextFromExcel(filePath) {
+    try {
+        const workbook = XLSX.readFile(filePath);
+        let text = '';
+        workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            data.forEach(row => {
+                text += row.filter(cell => cell).join(' ') + '\n';
+            });
+        });
+        return text;
+    } catch (error) {
+        console.error('Excel extraction error:', error);
+        return '';
+    }
+}
+
 // استخراج النص من TXT
 function extractTextFromTXT(filePath) {
     return fs.readFileSync(filePath, 'utf-8');
 }
 
-// تقسيم النص إلى أجزاء صغيرة
+// تقسيم النص إلى أجزاء صغيرة (chunks)
 function chunkText(text, chunkSize = 500) {
+    if (!text) return [];
     const sentences = text.split(/[.!?؟!]\s+/);
     const chunks = [];
     let currentChunk = '';
@@ -44,7 +77,11 @@ function saveChunks(chunks, fileName) {
     let existingChunks = [];
     
     if (fs.existsSync(vectorFile)) {
-        existingChunks = JSON.parse(fs.readFileSync(vectorFile, 'utf-8'));
+        try {
+            existingChunks = JSON.parse(fs.readFileSync(vectorFile, 'utf-8'));
+        } catch (e) {
+            console.error('Error reading existing chunks:', e);
+        }
     }
     
     const newChunks = chunks.map((text, index) => ({
@@ -67,10 +104,18 @@ async function trainOnFile(filePath, fileName) {
         
         if (ext === '.pdf') {
             text = await extractTextFromPDF(filePath);
+        } else if (ext === '.docx') {
+            text = await extractTextFromWord(filePath);
+        } else if (ext === '.xlsx' || ext === '.xls') {
+            text = extractTextFromExcel(filePath);
         } else if (ext === '.txt') {
             text = extractTextFromTXT(filePath);
         } else {
-            throw new Error(`نوع الملف غير مدعوم حالياً: ${ext}. استخدم PDF أو TXT.`);
+            throw new Error(`نوع الملف غير مدعوم حالياً: ${ext}. استخدم PDF, DOCX, XLSX, أو TXT.`);
+        }
+        
+        if (!text || text.length < 10) {
+            throw new Error('الملف لا يحتوي على نص كافي للتدريب');
         }
         
         const chunks = chunkText(text);
