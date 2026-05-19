@@ -107,6 +107,7 @@
                 document.getElementById('attendance-date').value = currentDate;
                 await loadAttendance();
                 updateSearchInfo();
+                updateSummary();
             } catch (error) { showToast('خطأ في تحميل بيانات الطلاب', 'error'); }
         }
 
@@ -137,7 +138,7 @@
         function renderAttendanceTable() {
             const tbody = document.getElementById('attendance-table-body');
             tbody.innerHTML = '';
-            if (filteredStudents.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="no-results">🚫 لا توجد طلاب في هذا الصف</td></tr>`; return; }
+            if (filteredStudents.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="no-results">🚫 لا توجد طلاب في هذا الصف<\/td><\/tr>`; return; }
             filteredStudents.forEach((student, index) => {
                 const record = attendanceRecords[student.studentCode];
                 const status = record ? record.status : 'present';
