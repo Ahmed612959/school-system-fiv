@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
 const pdfParse = require('pdf-parse');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -131,6 +133,7 @@ if (!MONGODB_URI) {
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 }
+
 // إعادة محاولة الاتصال إذا فشل
 mongoose.connection.on('error', (err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -446,7 +449,6 @@ app.get('/api/attendance/stats/:studentCode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب إحصائيات الحضور' }); }
 });
 
-
 // ====================== الذكاء الاصطناعي Routes ======================
 const multer = require('multer');
 
@@ -512,13 +514,10 @@ app.delete('/api/ai/clear', async (req, res) => {
     }
 });
 
-
-
 // ====================== Error Handling ======================
 app.use((err, req, res, next) => {
     console.error('❌ Unhandled Error:', err);
     res.status(500).json({ error: 'حدث خطأ داخلي في السيرفر', details: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
-
 
 module.exports = app;
