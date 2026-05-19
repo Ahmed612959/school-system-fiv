@@ -6,8 +6,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
 const pdfParse = require('pdf-parse');
-const path = require('path');
-const fs = require('fs');
 
 const app = express();
 
@@ -133,30 +131,6 @@ if (!MONGODB_URI) {
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 }
-
-// إعادة محاولة الاتصال إذا فشل
-mongoose.connection.on('error', (err) => {
-    console.error('❌ MongoDB connection error:', err);
-    setTimeout(() => {
-        console.log('🔄 Attempting to reconnect to MongoDB...');
-        mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 30000,
-            socketTimeoutMS: 60000,
-            connectTimeoutMS: 30000,
-        });
-    }, 5000);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('⚠️ MongoDB disconnected, attempting to reconnect...');
-    setTimeout(() => {
-        mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 30000,
-            socketTimeoutMS: 60000,
-            connectTimeoutMS: 30000,
-        });
-    }, 5000);
-});
 
 // ====================== دوال مساعدة ======================
 function generateUniqueUsername(fullName, id, existingUsers) {
@@ -447,71 +421,6 @@ app.get('/api/attendance/stats/:studentCode', async (req, res) => {
         const percentage = attendance.length > 0 ? (present / attendance.length) * 100 : 0;
         res.json({ present, absent, late, total: attendance.length, percentage: percentage.toFixed(1) });
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب إحصائيات الحضور' }); }
-});
-
-// ====================== الذكاء الاصطناعي Routes ======================
-const multer = require('multer');
-
-const aiUploadDir = path.join(__dirname, '../public/ai-uploads');
-if (!fs.existsSync(aiUploadDir)) fs.mkdirSync(aiUploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, aiUploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage: storage });
-
-const { trainOnFile, clearAllData, askQuestion, loadTrainingFiles } = require('./ai-chat');
-
-// رفع ملف للتدريب
-app.post('/api/ai/train', upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: 'يرجى اختيار ملف أولاً' });
-        
-        const result = await trainOnFile(req.file.path, req.file.originalname);
-        try { fs.unlinkSync(req.file.path); } catch(e) {}
-        
-        if (result.success) {
-            res.json({ success: true, message: `✅ تم تدريب الذكاء الاصطناعي على "${result.fileName}"`, chunksCount: result.chunksCount });
-        } else {
-            res.status(500).json({ error: result.error });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// سؤال للذكاء الاصطناعي
-app.post('/api/ai/ask', async (req, res) => {
-    try {
-        const { question } = req.body;
-        if (!question) return res.status(400).json({ error: 'يرجى إدخال سؤال' });
-        
-        const answer = await askQuestion(question);
-        res.json({ answer });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// حالة الذكاء الاصطناعي
-app.get('/api/ai/status', async (req, res) => {
-    try {
-        const files = loadTrainingFiles();
-        res.json({ trained: files.length > 0, fileCount: files.length });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// حذف جميع بيانات التدريب
-app.delete('/api/ai/clear', async (req, res) => {
-    try {
-        const result = clearAllData();
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
 });
 
 // ====================== Error Handling ======================
