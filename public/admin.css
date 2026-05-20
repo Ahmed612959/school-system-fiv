@@ -1688,3 +1688,391 @@ html, body {
         font-size: 1rem;
     }
 }
+
+/* ====================== تحسينات عامة للتجاوب ====================== */
+
+/* تحسين تنسيق الحقول والنصوص */
+.admin-container {
+    padding: 20px;
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* تحسين تنسيق الأزرار */
+.submit-btn, .grade-buttons .submit-btn {
+    width: auto;
+    min-width: 180px;
+    margin: 5px;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .submit-btn, .grade-buttons .submit-btn {
+        min-width: 140px;
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+}
+
+/* تحسين تنسيق الحقول في النماذج */
+.input-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.input-group input, 
+.input-group select, 
+.input-group textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* تحسين تنسيق الجداول */
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.results-table table,
+.users-table table,
+.violations-table table,
+.notifications-table table {
+    min-width: 600px;
+    width: 100%;
+}
+
+/* تحسين تنسيق صفوف الجداول */
+.results-table th, 
+.results-table td,
+.users-table th, 
+.users-table td,
+.violations-table th, 
+.violations-table td,
+.notifications-table th, 
+.notifications-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .results-table th, 
+    .results-table td,
+    .users-table th, 
+    .users-table td,
+    .violations-table th, 
+    .violations-table td,
+    .notifications-table th, 
+    .notifications-table td {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+}
+
+/* تحسين تنسيق الأزرار في الجداول */
+.edit-btn, .delete-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    margin: 2px;
+    display: inline-block;
+}
+
+/* تحسين تنسيق أزرار الصفوف (class-buttons-bar) */
+.class-buttons-bar {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.class-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .class-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+/* تحسين تنسيق أزرار الصفوف (grade-buttons) */
+.grade-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.grade-buttons .submit-btn {
+    background: #1a2526;
+    color: #d4af37;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .grade-buttons .submit-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+/* تحسين تنسيق قسم رفع الملفات */
+.upload-section input[type="file"] {
+    width: 90%;
+    max-width: 400px;
+    margin: 10px auto;
+}
+
+.upload-section textarea {
+    width: 90%;
+    max-width: 600px;
+}
+
+/* تحسين تنسيق الإحصائيات */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.stat-item {
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-item p {
+    font-size: 0.85rem;
+    margin: 0;
+    white-space: normal;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+    }
+    .stat-item p {
+        font-size: 0.75rem;
+    }
+    .stat-item p i {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* تحسين تنسيق الإشعارات */
+.notifications-section {
+    padding: 15px;
+    margin: 20px auto;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.notifications-section textarea {
+    max-width: 100%;
+}
+
+/* تحسين تنسيق قسم الاختبارات */
+.exams-section .exam-form-container {
+    padding: 15px;
+    overflow-x: auto;
+}
+
+.exams-section .input-group input,
+.exams-section .input-group select,
+.exams-section .input-group textarea {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* تحسين تنسيق نتائج الاختبارات */
+.test-results-section {
+    max-width: 100%;
+    padding: 15px;
+    margin: 20px auto;
+    overflow-x: auto;
+}
+
+.test-results-table {
+    overflow-x: auto;
+}
+
+.test-results-table table {
+    min-width: 500px;
+}
+
+/* تحسين تنسيق صفحة إضافة النتيجة */
+.add-result-section {
+    overflow-x: auto;
+}
+
+.add-result-section form {
+    min-width: 280px;
+}
+
+.add-result-section .input-group input,
+.add-result-section .input-group select {
+    width: 100%;
+}
+
+/* تحسين تنسيق أزرار الإجراءات السريعة */
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.home-btn, .logout-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .main-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .logo {
+        width: 50px;
+    }
+    .main-header h1 {
+        font-size: 1rem;
+        width: 100%;
+        order: 1;
+    }
+    .header-buttons {
+        order: 2;
+    }
+    .home-btn, .logout-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+}
+
+/* تحسين تنسيق الناف بار */
+.nav-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px;
+}
+
+.nav-bar a {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .nav-bar a {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+    .nav-bar a i {
+        font-size: 0.9rem;
+    }
+}
+
+/* تحسين تنسيق الأزرار المنفردة */
+.submit-btn:not(.grade-buttons .submit-btn) {
+    display: inline-block;
+    width: auto;
+    margin: 5px;
+}
+
+/* تحسين تنسيق أزرار الإدارة السريعة */
+.admin-container > .submit-btn,
+.admin-container > a.submit-btn {
+    display: inline-block;
+    width: auto;
+    margin: 10px 5px;
+    text-decoration: none;
+    text-align: center;
+}
+
+/* تحسين تنسيق الفوتر */
+footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+}
+
+/* تحسين أزرار التمرير */
+.scroll-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .scroll-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+}
+
+/* إصلاح مشكلة الفائض في الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 10px;
+        margin: 10px;
+    }
+    
+    .results-table th:nth-child(1),
+    .results-table td:nth-child(1),
+    .results-table th:nth-child(2),
+    .results-table td:nth-child(2) {
+        min-width: 120px;
+    }
+    
+    .results-table th:nth-child(3),
+    .results-table td:nth-child(3),
+    .results-table th:nth-child(4),
+    .results-table td:nth-child(4),
+    .results-table th:nth-child(5),
+    .results-table td:nth-child(5) {
+        min-width: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .class-buttons-bar {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .class-btn {
+        width: 90%;
+        justify-content: center;
+    }
+    
+    .grade-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .grade-buttons .submit-btn {
+        width: 90%;
+        text-align: center;
+    }
+}
