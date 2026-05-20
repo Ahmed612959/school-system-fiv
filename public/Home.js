@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!tableBody) return;
         tableBody.innerHTML = '';
         if (notifications.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="2">لا توجد إشعارات حاليًا<\/td></tr>';
+            tableBody.innerHTML = '<td><td colspan="2">لا توجد إشعارات حاليًا<\/td></td>';
             return;
         }
         notifications.forEach(n => {
@@ -177,7 +177,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         dashboard.style.display = 'block';
         
-        // عرض الدرجات (حتى لو بدون مواد)
         if (student.subjects && student.subjects.length > 0) {
             const percentage = calculateStudentPercentage(student);
             const total = calculateStudentTotal(student);
@@ -199,7 +198,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('class-average').innerHTML = `📈 --`;
         }
         
-        // جلب إحصائيات الحضور (مهم جداً - يظهر حتى بدون درجات)
         if (student && student.studentCode) {
             await fetchAttendanceStats(student.studentCode);
             renderAttendanceStats();
@@ -242,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const values = [student.fullName, student.studentCode, ...subjectsWithGrades.map(s => `${s.grade} / ${s.max}`)];
         resultBody.innerHTML = `<tr><td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}<\/td><td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}<\/td><td>${total} / ${TOTAL_POSSIBLE}<\/td><td class="${percentageClass}">${percentage.toFixed(1)}%<\/td><\/tr>`;
         const studentVios = violations.filter(v => v.studentId === student.studentCode);
-        violationsBody.innerHTML = studentVios.length ? studentVios.map(v => `<tr><td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td><td>${v.reason}<\/td><td>${v.penalty}<\/td><td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td><td>${v.date}<\/td><\/tr>`).join('') : '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td><\/tr>';
+        violationsBody.innerHTML = studentVios.length ? studentVios.map(v => `<td><td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td><td>${v.reason}<\/td><td>${v.penalty}<\/td><td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td><td>${v.date}<\/td><\/tr>`).join('') : '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td><\/tr>';
     }
 
     function renderWelcomeMessage() {
@@ -258,81 +256,127 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-
-
-    // ====================== تفعيل الإشعارات ======================
-async function enableNotifications() {
-    if (!('Notification' in window)) {
-        showToast('⚠️ متصفحك لا يدعم الإشعارات', 'error');
-        return;
-    }
+    // ====================== تفعيل الإشعارات (Push Notifications) ======================
     
-    if (Notification.permission === 'granted') {
-        await subscribeToPush();
-    } else if (Notification.permission !== 'denied') {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            await subscribeToPush();
-        } else {
-            showToast('❌ تم رفض الإشعارات', 'error');
+    // دالة تحويل المفتاح من Base64 إلى Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
         }
-    } else {
-        showToast('❌ الإشعارات مرفوضة، يرجى تفعيلها من إعدادات المتصرب', 'error');
+        return outputArray;
     }
-}
 
-async function subscribeToPush() {
-    try {
-        const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+    async function enableNotifications() {
+        if (!('Notification' in window)) {
+            showToast('⚠️ متصفحك لا يدعم الإشعارات', 'error');
+            return;
+        }
         
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        const response = await fetch('/api/notifications/settings');
-        const data = await response.json();
+        if (!('PushManager' in window)) {
+            showToast('⚠️ متصفحك لا يدعم الإشعارات المتقدمة', 'error');
+            return;
+        }
         
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: data.publicKey
-        });
-        
-        await fetch('/api/notifications/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subscription: subscription,
-                userId: user?.username || 'guest',
-                userType: user?.type || 'student'
-            })
-        });
-        
-        showToast('✅ تم تفعيل الإشعارات بنجاح!', 'success');
-        const btn = document.getElementById('enableNotificationsBtn');
-        if (btn) btn.style.display = 'none';
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('❌ حدث خطأ في تفعيل الإشعارات', 'error');
+        if (Notification.permission === 'granted') {
+            await subscribeToPush();
+        } else if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                await subscribeToPush();
+            } else {
+                showToast('❌ تم رفض الإشعارات', 'error');
+            }
+        } else {
+            showToast('❌ الإشعارات مرفوضة، يرجى تفعيلها من إعدادات المتصرب', 'error');
+        }
     }
-}
 
-// زر تفعيل الإشعارات
-const notifBtn = document.getElementById('enableNotificationsBtn');
-if (notifBtn) {
-    notifBtn.addEventListener('click', enableNotifications);
-}
+    async function subscribeToPush() {
+        try {
+            const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+            
+            // انتظر حتى يكون Service Worker جاهزاً
+            const registration = await navigator.serviceWorker.ready;
+            console.log('✅ Service Worker is ready');
+            
+            // جلب المفتاح العام من السيرفر
+            const response = await fetch('/api/notifications/settings');
+            const data = await response.json();
+            
+            if (!data.publicKey) {
+                showToast('⚠️ لم يتم إعداد الإشعارات بعد، يرجى المحاولة لاحقاً', 'error');
+                return;
+            }
+            
+            console.log('📢 Public key received');
+            
+            // تحويل المفتاح
+            const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
+            
+            // حذف الاشتراك القديم إن وجد
+            const existingSubscription = await registration.pushManager.getSubscription();
+            if (existingSubscription) {
+                await existingSubscription.unsubscribe();
+                console.log('🗑️ Old subscription removed');
+            }
+            
+            // إنشاء اشتراك جديد
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
+            });
+            
+            console.log('✅ New subscription created');
+            
+            // حفظ الاشتراك في السيرفر
+            const saveResponse = await fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscription: subscription,
+                    userId: user?.username || 'guest',
+                    userType: user?.type || 'student'
+                })
+            });
+            
+            if (saveResponse.ok) {
+                showToast('✅ تم تفعيل الإشعارات بنجاح! ستصل إليك التنبيهات', 'success');
+                const btn = document.getElementById('enableNotificationsBtn');
+                if (btn) btn.style.display = 'none';
+            } else {
+                const errorData = await saveResponse.json();
+                showToast('❌ فشل الحفظ: ' + (errorData.error || 'خطأ غير معروف'), 'error');
+            }
+        } catch (error) {
+            console.error('❌ Error in subscribeToPush:', error);
+            showToast('❌ حدث خطأ في تفعيل الإشعارات: ' + error.message, 'error');
+        }
+    }
 
-// تسجيل Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
-}
+    // زر تفعيل الإشعارات
+    const notifBtn = document.getElementById('enableNotificationsBtn');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', enableNotifications);
+    }
 
+    // تسجيل Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ Service Worker registered:', reg))
+            .catch(err => console.log('❌ SW failed:', err));
+    }
 
-
-    
-
+    // ====================== دالة عرض التنبيهات ======================
     function showToast(message, type = 'success') {
         const bg = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
         Toastify({ text: message, duration: 4000, gravity: "top", position: "right", backgroundColor: bg, style: { fontFamily: '"Tajawal", sans-serif', fontSize: '18px', direction: 'rtl', textAlign: 'right', borderRadius: '12px', padding: '16px 24px' } }).showToast();
     }
 
+    // ====================== تنفيذ كل شيء ======================
     await loadInitialData();
     renderNavbar();
     renderWelcomeMessage();
