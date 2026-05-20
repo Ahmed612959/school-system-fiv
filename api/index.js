@@ -423,6 +423,125 @@ app.get('/api/attendance/stats/:studentCode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب إحصائيات الحضور' }); }
 });
 
+
+// ====================== نظام الإشعارات Push ======================
+const webpush = require('web-push');
+
+// إعداد VAPID keys (ضع المفاتيح التي تولدتها)
+webpush.setVapidDetails(
+    'mailto:info@aldabeia.edu.eg',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
+
+// نموذج تخزين الاشتراكات
+const subscriptionSchema = new mongoose.Schema({
+    endpoint: { type: String, required: true, unique: true },
+    keys: {
+        p256dh: String,
+        auth: String
+    },
+    userId: String,
+    userType: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Subscription = mongoose.models.Subscription || mongoose.model('Subscription', subscriptionSchema);
+
+// تسجيل اشتراك جديد
+app.post('/api/notifications/subscribe', async (req, res) => {
+    try {
+        const { subscription, userId, userType } = req.body;
+        
+        const existing = await Subscription.findOne({ endpoint: subscription.endpoint });
+        if (existing) {
+            return res.json({ message: 'Subscription already exists' });
+        }
+        
+        const newSubscription = new Subscription({
+            endpoint: subscription.endpoint,
+            keys: subscription.keys,
+            userId: userId,
+            userType: userType
+        });
+        
+        await newSubscription.save();
+        res.json({ success: true, message: 'Subscribed successfully' });
+    } catch (error) {
+        console.error('Error saving subscription:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// إلغاء الاشتراك
+app.post('/api/notifications/unsubscribe', async (req, res) => {
+    try {
+        const { endpoint } = req.body;
+        await Subscription.deleteOne({ endpoint });
+        res.json({ success: true, message: 'Unsubscribed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// إرسال إشعار للجميع
+app.post('/api/notifications/send-all', async (req, res) => {
+    try {
+        const { title, body, url, userType } = req.body;
+        
+        let query = {};
+        if (userType && userType !== 'all') {
+            query.userType = userType;
+        }
+        
+        const subscriptions = await Subscription.find(query);
+        let sent = 0, failed = 0;
+        
+        for (const sub of subscriptions) {
+            const payload = JSON.stringify({
+                title: title || 'إشعار جديد',
+                body: body || '',
+                icon: '/logo.png',
+                url: url || '/'
+            });
+            
+            try {
+                await webpush.sendNotification(sub, payload);
+                sent++;
+            } catch (error) {
+                failed++;
+                if (error.statusCode === 410) {
+                    await Subscription.deleteOne({ endpoint: sub.endpoint });
+                }
+            }
+        }
+        
+        res.json({ success: true, sent, failed, total: subscriptions.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// جلب عدد المشتركين
+app.get('/api/notifications/subscribers', async (req, res) => {
+    try {
+        const count = await Subscription.countDocuments();
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// جلب المفتاح العام
+app.get('/api/notifications/settings', async (req, res) => {
+    try {
+        res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // ====================== Error Handling ======================
 app.use((err, req, res, next) => {
     console.error('❌ Unhandled Error:', err);
