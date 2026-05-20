@@ -427,13 +427,17 @@ app.get('/api/attendance/stats/:studentCode', async (req, res) => {
 // ====================== نظام الإشعارات Push ======================
 const webpush = require('web-push');
 
-// إعداد VAPID keys (ضع المفاتيح التي تولدتها)
-webpush.setVapidDetails(
-    'mailto:info@aldabeia.edu.eg',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-);
-
+// التحقق من وجود المفاتيح
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    console.error('❌ VAPID keys are missing! Please add them to Environment Variables');
+} else {
+    webpush.setVapidDetails(
+        'mailto:info@aldabeia.edu.eg',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+    console.log('✅ VAPID keys configured');
+}
 // نموذج تخزين الاشتراكات
 const subscriptionSchema = new mongoose.Schema({
     endpoint: { type: String, required: true, unique: true },
