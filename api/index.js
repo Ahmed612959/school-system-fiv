@@ -131,6 +131,29 @@ if (!MONGODB_URI) {
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 }
+// إعادة محاولة الاتصال إذا فشل
+mongoose.connection.on('error', (err) => {
+    console.error('❌ MongoDB connection error:', err);
+    setTimeout(() => {
+        console.log('🔄 Attempting to reconnect to MongoDB...');
+        mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 60000,
+            connectTimeoutMS: 30000,
+        });
+    }, 5000);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('⚠️ MongoDB disconnected, attempting to reconnect...');
+    setTimeout(() => {
+        mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 60000,
+            connectTimeoutMS: 30000,
+        });
+    }, 5000);
+});
 
 // ====================== دوال مساعدة ======================
 function generateUniqueUsername(fullName, id, existingUsers) {
