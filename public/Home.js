@@ -258,6 +258,76 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
+
+
+    // ====================== تفعيل الإشعارات ======================
+async function enableNotifications() {
+    if (!('Notification' in window)) {
+        showToast('⚠️ متصفحك لا يدعم الإشعارات', 'error');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        await subscribeToPush();
+    } else if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            await subscribeToPush();
+        } else {
+            showToast('❌ تم رفض الإشعارات', 'error');
+        }
+    } else {
+        showToast('❌ الإشعارات مرفوضة، يرجى تفعيلها من إعدادات المتصرب', 'error');
+    }
+}
+
+async function subscribeToPush() {
+    try {
+        const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+        
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        const response = await fetch('/api/notifications/settings');
+        const data = await response.json();
+        
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: data.publicKey
+        });
+        
+        await fetch('/api/notifications/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subscription: subscription,
+                userId: user?.username || 'guest',
+                userType: user?.type || 'student'
+            })
+        });
+        
+        showToast('✅ تم تفعيل الإشعارات بنجاح!', 'success');
+        const btn = document.getElementById('enableNotificationsBtn');
+        if (btn) btn.style.display = 'none';
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('❌ حدث خطأ في تفعيل الإشعارات', 'error');
+    }
+}
+
+// زر تفعيل الإشعارات
+const notifBtn = document.getElementById('enableNotificationsBtn');
+if (notifBtn) {
+    notifBtn.addEventListener('click', enableNotifications);
+}
+
+// تسجيل Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
+}
+
+
+
+    
+
     function showToast(message, type = 'success') {
         const bg = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
         Toastify({ text: message, duration: 4000, gravity: "top", position: "right", backgroundColor: bg, style: { fontFamily: '"Tajawal", sans-serif', fontSize: '18px', direction: 'rtl', textAlign: 'right', borderRadius: '12px', padding: '16px 24px' } }).showToast();
