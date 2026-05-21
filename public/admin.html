@@ -275,27 +275,31 @@
             </div>
         </div>
     </div>
-
-    <h3>قائمة الإنذارات والمخالفات</h3>
-    <div class="violations-table">
-        <div class="table-wrapper">
-            <tr>
-                <thead>
-                    <tr>
-                        <th>رقم الجلوس</th>
-                        <th>النوع</th>
-                        <th>السبب</th>
-                        <th>العقوبة</th>
-                        <th>استدعاء ولي الأمر</th>
-                        <th>تاريخ الإضافة</th>
-                        <th>الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="violations-table-body"></tbody>
-            </table>
-        </div>
+<!-- جدول الإنذارات والمخالفات -->
+<div class="violations-table" style="margin-top: 20px;">
+    <h3>📋 قائمة الإنذارات والمخالفات</h3>
+    <div class="table-wrapper">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">رقم الجلوس</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">اسم الطالب</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">النوع</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">السبب</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">العقوبة</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">استدعاء ولي الأمر</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">تاريخ الإضافة</th>
+                    <th style="background: #1a2526; color: #d4af37; padding: 10px;">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="violations-table-body">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 20px;">جاري تحميل البيانات...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-</section>
+</div>
 
         <h2>إحصائيات</h2>
         <div class="stats-section" id="stats-section"></div>
