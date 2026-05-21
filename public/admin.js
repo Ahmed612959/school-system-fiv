@@ -487,45 +487,114 @@ function renderStats() {
         }
     };
 
-    function renderViolations() {
+   function renderViolations() {
     const tableBody = document.getElementById('violations-table-body');
     if (tableBody) {
         tableBody.innerHTML = '';
+        if (violations.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7">لا توجد إنذارات أو مخالفات مسجلة<\/td><\/tr>';
+            return;
+        }
+        
         violations.forEach((violation) => {
             const student = students.find(s => s.studentCode === violation.studentId);
             const studentName = student ? student.fullName : 'طالب غير موجود';
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${violation.studentId}</td>
-                <td>${studentName}</td>
-                <td>${violation.type === 'warning' ? 'إنذار' : 'مخالفة'}</td>
-                <td>${violation.reason}</td>
-                <td>${violation.penalty}</td>
-                <td>${violation.parentSummons ? 'نعم' : 'لا'}</td>
-                <td>${violation.date}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545;">
-                        <i class="fas fa-trash"></i>
+                <td data-label="رقم الجلوس (اخر 7 ارقام في بطاقة الطالب )">${violation.studentId}<\/td>
+                <td data-label="اسم الطالب">${studentName}<\/td>
+                <td data-label="النوع">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td>
+                <td data-label="السبب">${violation.reason}<\/td>
+                <td data-label="العقوبة">${violation.penalty}<\/td>
+                <td data-label="استدعاء ولي الأمر">${violation.parentSummons ? '✅ نعم' : '❌ لا'}<\/td>
+                <td data-label="تاريخ الإضافة">${violation.date}<\/td>
+                <td data-label="الإجراءات">
+                    <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; margin:2px;">
+                        <i class="fas fa-edit"></i> تعديل
                     </button>
-                    <button class="edit-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; margin-top:5px;">
+                    <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; margin:2px;">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                    <button class="whatsapp-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 8px; border-radius:4px; margin:2px; cursor:pointer;">
                         <i class="fab fa-whatsapp"></i> إرسال
                     </button>
-                </td>
+                <\/td>
             `;
             tableBody.appendChild(row);
         });
     }
 }
 
-  document.getElementById('add-violation-form')?.addEventListener('submit', async function(e) {
+
+
+
+// متغير لتخزين المخالفة الجاري تعديلها
+let editingViolationId = null;
+
+// فتح نافذة تعديل المخالفة
+window.editViolation = async function(violationId) {
+    const violation = violations.find(v => v._id === violationId);
+    if (!violation) {
+        showToast('لم يتم العثور على المخالفة!', 'error');
+        return;
+    }
+    
+    editingViolationId = violationId;
+    
+    // ملء النموذج بالبيانات الحالية
+    document.getElementById('violation-student-id').value = violation.studentId;
+    document.getElementById('violation-type').value = violation.type;
+    document.getElementById('violation-reason').value = violation.reason;
+    document.getElementById('violation-penalty').value = violation.penalty;
+    document.getElementById('parent-summons').checked = violation.parentSummons;
+    
+    // تغيير نص زر الإضافة إلى "تحديث"
+    const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = '✏️ تحديث المخالفة';
+        submitBtn.style.background = '#ffc107';
+        submitBtn.style.color = '#1a2526';
+    }
+    
+    // التمرير إلى النموذج
+    document.querySelector('#add-violation-form').scrollIntoView({ behavior: 'smooth' });
+    
+    showToast('قم بتعديل البيانات ثم اضغط تحديث', 'info');
+};
+
+
+
+    // زر إلغاء التعديل
+document.getElementById('cancelEditViolationBtn')?.addEventListener('click', function() {
+    editingViolationId = null;
+    document.querySelector('#add-violation-form').reset();
+    const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'إضافة إنذار/مخالفة';
+        submitBtn.style.background = '';
+        submitBtn.style.color = '';
+    }
+    this.style.display = 'none';
+    showToast('تم إلغاء التعديل', 'info');
+});
+
+// إظهار زر إلغاء التعديل عند التعديل
+window.editViolation = async function(violationId) {
+    // ... الكود السابق ...
+    
+    // إظهار زر إلغاء التعديل
+    const cancelBtn = document.getElementById('cancelEditViolationBtn');
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+};
+
+    
+ document.getElementById('add-violation-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const studentId = document.getElementById('violation-student-id').value.trim();
     const type = document.getElementById('violation-type').value;
     const reason = document.getElementById('violation-reason').value.trim();
     const penalty = document.getElementById('violation-penalty').value.trim();
     const parentSummons = document.getElementById('parent-summons').checked;
-    
-    // الحقل الجديد لرقم ولي الأمر (اختياري - لو عايز ترسل لرقم مختلف)
     const customParentPhone = document.getElementById('parent-phone')?.value.trim();
 
     if (!studentId || !reason || !penalty) {
@@ -533,7 +602,6 @@ function renderStats() {
         return;
     }
 
-    // البحث عن الطالب
     const student = students.find(s => s.studentCode === studentId);
     if (!student) {
         showToast('رقم الجلوس غير موجود! يرجى التأكد من رقم الجلوس.', 'error');
@@ -542,33 +610,46 @@ function renderStats() {
 
     const date = new Date().toLocaleString('ar-EG');
     
-    // حفظ المخالفة في قاعدة البيانات
-    const response = await saveToServer('/api/violations', { 
-        studentId, 
-        type, 
-        reason, 
-        penalty, 
-        parentSummons, 
-        date 
-    });
-    
-    if (response) {
-        violations = await getFromServer('/api/violations');
-        renderViolations();
-        showToast(`تم إضافة ${type === 'warning' ? 'إنذار' : 'مخالفة'} بنجاح!`, 'success');
-        this.reset();
+    // التحقق إذا كنا في وضع التعديل
+    if (editingViolationId) {
+        // تحديث المخالفة الموجودة
+        const response = await saveToServer(`/api/violations/${editingViolationId}`, { 
+            studentId, type, reason, penalty, parentSummons, date 
+        }, 'PUT');
         
-        // إرسال إشعار واتساب لولي الأمر
-        // استخدام رقم ولي الأمر المخزن في قاعدة البيانات أو الرقم المخصص
-        const parentPhone = customParentPhone || student.profile?.parentId;
+        if (response) {
+            violations = await getFromServer('/api/violations');
+            renderViolations();
+            showToast(`✅ تم تحديث ${type === 'warning' ? 'الإنذار' : 'المخالفة'} بنجاح!`, 'success');
+            
+            // إعادة تعيين وضع التعديل
+            editingViolationId = null;
+            const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'إضافة إنذار/مخالفة';
+                submitBtn.style.background = '';
+                submitBtn.style.color = '';
+            }
+            this.reset();
+        }
+    } else {
+        // إضافة مخالفة جديدة
+        const response = await saveToServer('/api/violations', { 
+            studentId, type, reason, penalty, parentSummons, date 
+        });
         
-        if (parentPhone && parentPhone.length >= 10) {
-            showToast('جاري إرسال إشعار واتساب لولي الأمر...', 'info');
-            await sendWhatsAppNotification(parentPhone, student.fullName, type, reason, penalty);
-        } else if (customParentPhone) {
-            showToast('رقم ولي الأمر غير صحيح أو غير مكتمل! لم يتم إرسال الإشعار.', 'warning');
-        } else {
-            showToast('لم يتم إرسال إشعار واتساب لأن رقم ولي الأمر غير مسجل.', 'warning');
+        if (response) {
+            violations = await getFromServer('/api/violations');
+            renderViolations();
+            showToast(`✅ تم إضافة ${type === 'warning' ? 'إنذار' : 'مخالفة'} بنجاح!`, 'success');
+            this.reset();
+            
+            // إرسال إشعار واتساب
+            const parentPhone = customParentPhone || student.profile?.parentId;
+            if (parentPhone && parentPhone.length >= 10) {
+                showToast('📱 جاري إرسال إشعار واتساب لولي الأمر...', 'info');
+                await sendWhatsAppNotification(parentPhone, student.fullName, type, reason, penalty);
+            }
         }
     }
 });
@@ -640,16 +721,40 @@ window.resendViolationWhatsApp = async function(violationId) {
 };
     
 
-    window.deleteViolation = async function(id) {
-        if (confirm('هل أنت متأكد من حذف هذا الإنذار/المخالفة؟')) {
-            const response = await saveToServer(`/api/violations/${id}`, {}, 'DELETE');
-            if (response) {
-                violations = await getFromServer('/api/violations');
-                renderViolations();
-                showToast('تم حذف الإنذار/المخالفة بنجاح.', 'success');
+  window.deleteViolation = async function(id) {
+    if (confirm('⚠️ هل أنت متأكد من حذف هذا الإنذار/المخالفة؟ لا يمكن التراجع!')) {
+        const response = await saveToServer(`/api/violations/${id}`, {}, 'DELETE');
+        if (response) {
+            violations = await getFromServer('/api/violations');
+            renderViolations();
+            showToast('🗑️ تم حذف الإنذار/المخالفة بنجاح.', 'success');
+            
+            // إذا كنا نعدل نفس المخالفة، قم بإلغاء وضع التعديل
+            if (editingViolationId === id) {
+                editingViolationId = null;
+                document.querySelector('#add-violation-form').reset();
+                const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.textContent = 'إضافة إنذار/مخالفة';
+                    submitBtn.style.background = '';
+                    submitBtn.style.color = '';
+                }
+                const cancelBtn = document.getElementById('cancelEditViolationBtn');
+                if (cancelBtn) cancelBtn.style.display = 'none';
             }
         }
-    };
+    }
+};
+
+    function updateViolationsStats() {
+    const warnings = violations.filter(v => v.type === 'warning').length;
+    const violationsCount = violations.filter(v => v.type === 'violation').length;
+    
+    document.getElementById('totalWarnings').textContent = warnings;
+    document.getElementById('totalViolations').textContent = violationsCount;
+}
+
+// استدعاءها بعد كل تعديل على المخالفات
 
     window.processText = async function() {
         const textInput = document.getElementById('text-input')?.value.trim();
