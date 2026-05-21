@@ -491,40 +491,52 @@ function renderStats() {
 // ====================== عرض قائمة الإنذارات والمخالفات ======================
 function renderViolations() {
     const tableBody = document.getElementById('violations-table-body');
-    if (tableBody) {
-        tableBody.innerHTML = '';
-        if (violations.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد إنذارات أو مخالفات مسجلة</td></tr>';
-            return;
-        }
-        
-        violations.forEach((violation) => {
-            const student = students.find(s => s.studentCode === violation.studentId);
-            const studentName = student ? student.fullName : 'طالب غير موجود';
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td data-label="رقم الجلوس">${violation.studentId}</td>
-                <td data-label="اسم الطالب">${studentName}</td>
-                <td data-label="النوع">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
-                <td data-label="السبب">${violation.reason}</td>
-                <td data-label="العقوبة">${violation.penalty}</td>
-                <td data-label="استدعاء ولي الأمر">${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
-                <td data-label="تاريخ الإضافة">${violation.date}</td>
-                <td data-label="الإجراءات">
-                    <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; margin:2px;">
-                        <i class="fas fa-edit"></i> تعديل
-                    </button>
-                    <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; margin:2px;">
-                        <i class="fas fa-trash"></i> حذف
-                    </button>
-                    <button class="whatsapp-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 8px; border-radius:4px; margin:2px; cursor:pointer;">
-                        <i class="fab fa-whatsapp"></i> واتساب
-                    </button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
+    console.log('🎯 Rendering violations, count:', violations.length);
+    
+    if (!tableBody) {
+        console.error('❌ violations-table-body not found in DOM');
+        return;
     }
+    
+    tableBody.innerHTML = '';
+    
+    if (!violations || violations.length === 0) {
+        tableBody.innerHTML = ' hilab<td colspan="8" style="text-align:center;">📭 لا توجد إنذارات أو مخالفات مسجلة</td> </tr>';
+        console.log('📭 No violations to display');
+        return;
+    }
+    
+    console.log('✅ Displaying', violations.length, 'violations');
+    
+    violations.forEach((violation, index) => {
+        const student = students.find(s => s.studentCode === violation.studentId);
+        const studentName = student ? student.fullName : 'طالب غير موجود';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${violation.studentId || '-'}</td>
+            <td>${studentName}</td>
+            <td>${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
+            <td style="max-width: 200px; word-break: break-word;">${violation.reason || '-'}</td>
+            <td>${violation.penalty || '-'}</td>
+            <td>${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
+            <td>${violation.date || '-'}</td>
+            <td>
+                <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; margin:2px;">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; margin:2px;">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+                <button class="whatsapp-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 8px; border-radius:4px; margin:2px; cursor:pointer;">
+                    <i class="fab fa-whatsapp"></i> واتساب
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    
+    console.log('✅ Table updated with', violations.length, 'rows');
 }
 
 // ====================== إحصائيات المخالفات ======================
