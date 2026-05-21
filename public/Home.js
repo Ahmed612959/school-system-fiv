@@ -60,21 +60,58 @@ document.addEventListener('DOMContentLoaded', async function() {
         navBar.innerHTML = links.map(l => `<a href="${l.href}" title="${l.title}"><i class="${l.icon}"><\/i></a>`).join('');
     }
 
-    const subjectMaxGrades = { "اللغة العربية": 20, "اللغة الإنجليزية": 20, "علوم تطبيقية": 40, "طب باطنة": 20, "تمريض باطني جراحي": 24, "حاسب آلي": 20, "الدين": 30 };
-    const TOTAL_POSSIBLE = 174;
-    const orderedSubjects = ["اللغة العربية", "اللغة الإنجليزية", "علوم تطبيقية", "طب باطنة", "تمريض باطني جراحي", "حاسب آلي", "الدين"];
+    // ====================== المواد والدرجات ======================
+    // المواد الأساسية (تدخل في المجموع)
+    const subjectMaxGrades = {
+        "اللغة العربية": 20,
+        "اللغة الإنجليزية": 20,
+        "علوم تطبيقية": 40,
+        "طب باطنة": 20,
+        "تمريض باطني جراحي": 24,
+        "حاسب آلي": 20
+    };
+    
+    // المواد الإضافية (خارج المجموع)
+    const extraSubjects = {
+        "الدين": 32
+    };
+    
+    const TOTAL_POSSIBLE = 144; // المجموع الكلي بدون المواد الإضافية (20+20+40+20+24+20 = 144)
+    
+    const orderedSubjects = ["اللغة العربية", "اللغة الإنجليزية", "علوم تطبيقية", "طب باطنة", "تمريض باطني جراحي", "حاسب آلي"];
+    const extraSubjectsList = ["الدين"];
 
+    // حساب النسبة المئوية للطالب (بدون المواد الإضافية)
     function calculateStudentPercentage(student) {
         if (!student.subjects || student.subjects.length === 0) return 0;
-        let totalEarned = student.subjects.reduce((sum, s) => sum + (s.grade || 0), 0);
+        let totalEarned = 0;
+        student.subjects.forEach(subject => {
+            if (subjectMaxGrades[subject.name]) {
+                totalEarned += subject.grade || 0;
+            }
+        });
         return (totalEarned / TOTAL_POSSIBLE) * 100;
     }
     
+    // حساب المجموع الكلي للطالب (بدون المواد الإضافية)
     function calculateStudentTotal(student) {
         if (!student.subjects) return 0;
-        return student.subjects.reduce((sum, s) => sum + (s.grade || 0), 0);
+        let total = 0;
+        student.subjects.forEach(subject => {
+            if (subjectMaxGrades[subject.name]) {
+                total += subject.grade || 0;
+            }
+        });
+        return total;
+    }
+    
+    // الحصول على درجة مادة إضافية (الدين)
+    function getExtraSubjectGrade(student, subjectName) {
+        const subject = student.subjects?.find(s => s.name === subjectName);
+        return subject ? (subject.grade || 0) : 0;
     }
 
+    // الحصول على قائمة المواد مع الدرجات (الأساسية فقط للرسم البياني)
     function getStudentSubjectsWithGrades(student) {
         const result = [];
         orderedSubjects.forEach(subjName => {
@@ -180,9 +217,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (student.subjects && student.subjects.length > 0) {
             const percentage = calculateStudentPercentage(student);
             const total = calculateStudentTotal(student);
+            const religionGrade = getExtraSubjectGrade(student, 'الدين');
             const subjectsWithGrades = getStudentSubjectsWithGrades(student);
-            document.getElementById('student-percentage').innerHTML = `📊 نسبة نجاحك: <strong>${percentage.toFixed(1)}%</strong><br><small>(المجموع: ${total} / ${TOTAL_POSSIBLE})</small>`;
+            
+            document.getElementById('student-percentage').innerHTML = `📊 نسبة نجاحك: <strong>${percentage.toFixed(1)}%</strong><br>
+            <small>(المجموع: ${total} / ${TOTAL_POSSIBLE})</small>`;
             document.getElementById('class-average').innerHTML = `📈 متوسط الفصل: <strong>${calculateClassAverage().toFixed(1)}%</strong>`;
+            
+            // إضافة عرض مادة الدين بشكل منفصل
+            const religionDiv = document.createElement('div');
+            religionDiv.style.cssText = 'margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 8px; text-align: center;';
+            religionDiv.innerHTML = `📖 مادة الدين: <strong>${religionGrade} / 32</strong> (خارج المجموع)`;
+            const statsDiv = document.querySelector('.stats');
+            if (statsDiv && !document.getElementById('religionDisplay')) {
+                const existing = document.getElementById('religionDisplay');
+                if (existing) existing.remove();
+                religionDiv.id = 'religionDisplay';
+                statsDiv.appendChild(religionDiv);
+            }
             
             const ctx = document.getElementById('gradesChart')?.getContext('2d');
             if (ctx && window.Chart) {
@@ -220,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderStudentResult(student, resultBody, violationsBody);
             showToast('✅ تم العثور على الطالب بنجاح!', 'success');
         } else {
-            resultBody.innerHTML = '<tr><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!<\/td></tr>';
+            resultBody.innerHTML = '<tr><td colspan="4">❌ لا توجد نتيجة بهذا الاسم ورقم الجلوس!<\/td><tr>';
             violationsBody.innerHTML = '<td><td colspan="5">❌ لا توجد نتيجة!<\/td></tr>';
             showToast('❌ الطالب غير موجود! تأكد من رقم الجلوس', 'error');
         }
@@ -232,15 +284,46 @@ document.addEventListener('DOMContentLoaded', async function() {
             violationsBody.innerHTML = '<td><td colspan="5">✅ لا توجد مخالفات<\/td></tr>';
             return;
         }
-        const total = calculateStudentTotal(student);
-        const percentage = calculateStudentPercentage(student);
+        
+        // حساب المجموع (بدون المواد الإضافية)
+        let total = 0;
+        const subjectGrades = [];
+        
+        orderedSubjects.forEach(subjName => {
+            const subject = student.subjects.find(s => s.name === subjName);
+            const grade = subject ? (subject.grade || 0) : 0;
+            subjectGrades.push({ name: subjName, grade: grade, max: subjectMaxGrades[subjName] });
+            total += grade;
+        });
+        
+        // إضافة المواد الإضافية (الدين)
+        extraSubjectsList.forEach(subjName => {
+            const subject = student.subjects.find(s => s.name === subjName);
+            const grade = subject ? (subject.grade || 0) : 0;
+            subjectGrades.push({ name: `${subjName} (خارج المجموع)`, grade: grade, max: extraSubjects[subjName], isExtra: true });
+        });
+        
+        const percentage = (total / TOTAL_POSSIBLE) * 100;
         let percentageClass = percentage >= 85 ? 'high-percentage' : (percentage >= 60 ? 'medium-percentage' : 'low-percentage');
-        const subjectsWithGrades = getStudentSubjectsWithGrades(student);
-        const labels = ['الاسم', 'رقم الجلوس', ...subjectsWithGrades.map(s => s.name)];
-        const values = [student.fullName, student.studentCode, ...subjectsWithGrades.map(s => `${s.grade} / ${s.max}`)];
-        resultBody.innerHTML = `<tr><td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}<\/td><td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}<\/td><td>${total} / ${TOTAL_POSSIBLE}<\/td><td class="${percentageClass}">${percentage.toFixed(1)}%<\/td><\/tr>`;
+        
+        const labels = ['الاسم', 'رقم الجلوس', ...subjectGrades.map(s => s.name)];
+        const values = [student.fullName, student.studentCode, ...subjectGrades.map(s => `${s.grade} / ${s.max}`)];
+        
+        resultBody.innerHTML = `<tr>
+            <td>${labels.map((l,i) => i < labels.length-1 ? l+'<hr>' : l).join('')}<\/td>
+            <td>${values.map((v,i) => i < values.length-1 ? v+'<hr>' : v).join('')}<\/td>
+            <td>${total} / ${TOTAL_POSSIBLE}<\/td>
+            <td class="${percentageClass}">${percentage.toFixed(1)}%<\/td>
+        <\/tr>`;
+        
         const studentVios = violations.filter(v => v.studentId === student.studentCode);
-        violationsBody.innerHTML = studentVios.length ? studentVios.map(v => `<td><td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td><td>${v.reason}<\/td><td>${v.penalty}<\/td><td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td><td>${v.date}<\/td><\/tr>`).join('') : '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td><\/tr>';
+        violationsBody.innerHTML = studentVios.length ? studentVios.map(v => `<tr>
+            <td>${v.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td>
+            <td>${v.reason}<\/td>
+            <td>${v.penalty}<\/td>
+            <td>${v.parentSummons ? '✅ نعم' : '❌ لا'}<\/td>
+            <td>${v.date}<\/td>
+        <\/tr>`).join('') : '<tr><td colspan="5">✅ لا توجد مخالفات مسجلة<\/td><\/tr>';
     }
 
     function renderWelcomeMessage() {
@@ -258,7 +341,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // ====================== تفعيل الإشعارات (Push Notifications) ======================
     
-    // دالة تحويل المفتاح من Base64 إلى Uint8Array
     function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -298,12 +380,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function subscribeToPush() {
         try {
             const user = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
-            
-            // انتظر حتى يكون Service Worker جاهزاً
             const registration = await navigator.serviceWorker.ready;
             console.log('✅ Service Worker is ready');
             
-            // جلب المفتاح العام من السيرفر
             const response = await fetch('/api/notifications/settings');
             const data = await response.json();
             
@@ -312,19 +391,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
-            console.log('📢 Public key received');
-            
-            // تحويل المفتاح
             const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
             
-            // حذف الاشتراك القديم إن وجد
             const existingSubscription = await registration.pushManager.getSubscription();
             if (existingSubscription) {
                 await existingSubscription.unsubscribe();
                 console.log('🗑️ Old subscription removed');
             }
             
-            // إنشاء اشتراك جديد
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: applicationServerKey
@@ -332,7 +406,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             console.log('✅ New subscription created');
             
-            // حفظ الاشتراك في السيرفر
             const saveResponse = await fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -357,50 +430,45 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // زر تفعيل الإشعارات
     const notifBtn = document.getElementById('enableNotificationsBtn');
     if (notifBtn) {
         notifBtn.addEventListener('click', enableNotifications);
     }
 
-    // تسجيل Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('✅ Service Worker registered:', reg))
             .catch(err => console.log('❌ SW failed:', err));
     }
 
-
     // ====================== تثبيت التطبيق (PWA) ======================
-let deferredPrompt;
+    let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBtn = document.getElementById('installAppBtn');
-    if (installBtn) {
-        installBtn.style.display = 'inline-block';
-        installBtn.onclick = async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    console.log('✅ User accepted install');
-                    showToast('✅ تم تثبيت التطبيق بنجاح!', 'success');
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-block';
+            installBtn.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        console.log('✅ User accepted install');
+                        showToast('✅ تم تثبيت التطبيق بنجاح!', 'success');
+                    }
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
                 }
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
-            }
-        };
-    }
-});
+            };
+        }
+    });
 
-// التحقق من أن التطبيق مثبت
-window.addEventListener('appinstalled', () => {
-    console.log('✅ App installed successfully');
-    showToast('🎉 شكراً لتثبيت التطبيق!', 'success');
-});
-    
+    window.addEventListener('appinstalled', () => {
+        console.log('✅ App installed successfully');
+        showToast('🎉 شكراً لتثبيت التطبيق!', 'success');
+    });
 
     // ====================== دالة عرض التنبيهات ======================
     function showToast(message, type = 'success') {
