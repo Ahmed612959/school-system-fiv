@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderStats();
         renderNotifications();
         renderViolations();
+        updateViolationsStats();
     }
 
     function renderAdmins() {
@@ -487,12 +488,13 @@ function renderStats() {
         }
     };
 
-   function renderViolations() {
+// ====================== عرض قائمة الإنذارات والمخالفات ======================
+function renderViolations() {
     const tableBody = document.getElementById('violations-table-body');
     if (tableBody) {
         tableBody.innerHTML = '';
         if (violations.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">لا توجد إنذارات أو مخالفات مسجلة<\/td><\/tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد إنذارات أو مخالفات مسجلة</td></tr>';
             return;
         }
         
@@ -501,13 +503,13 @@ function renderStats() {
             const studentName = student ? student.fullName : 'طالب غير موجود';
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td data-label="رقم الجلوس (اخر 7 ارقام في بطاقة الطالب )">${violation.studentId}<\/td>
-                <td data-label="اسم الطالب">${studentName}<\/td>
-                <td data-label="النوع">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}<\/td>
-                <td data-label="السبب">${violation.reason}<\/td>
-                <td data-label="العقوبة">${violation.penalty}<\/td>
-                <td data-label="استدعاء ولي الأمر">${violation.parentSummons ? '✅ نعم' : '❌ لا'}<\/td>
-                <td data-label="تاريخ الإضافة">${violation.date}<\/td>
+                <td data-label="رقم الجلوس">${violation.studentId}</td>
+                <td data-label="اسم الطالب">${studentName}</td>
+                <td data-label="النوع">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
+                <td data-label="السبب">${violation.reason}</td>
+                <td data-label="العقوبة">${violation.penalty}</td>
+                <td data-label="استدعاء ولي الأمر">${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
+                <td data-label="تاريخ الإضافة">${violation.date}</td>
                 <td data-label="الإجراءات">
                     <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; margin:2px;">
                         <i class="fas fa-edit"></i> تعديل
@@ -516,26 +518,38 @@ function renderStats() {
                         <i class="fas fa-trash"></i> حذف
                     </button>
                     <button class="whatsapp-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 8px; border-radius:4px; margin:2px; cursor:pointer;">
-                        <i class="fab fa-whatsapp"></i> إرسال
+                        <i class="fab fa-whatsapp"></i> واتساب
                     </button>
-                <\/td>
+                </td>
             `;
             tableBody.appendChild(row);
         });
     }
 }
 
+// ====================== إحصائيات المخالفات ======================
+function updateViolationsStats() {
+    const warnings = violations.filter(v => v.type === 'warning').length;
+    const violationsCount = violations.filter(v => v.type === 'violation').length;
+    const totalActions = violations.length;
+    
+    const warningsEl = document.getElementById('totalWarnings');
+    const violationsEl = document.getElementById('totalViolations');
+    const actionsEl = document.getElementById('totalActions');
+    
+    if (warningsEl) warningsEl.textContent = warnings;
+    if (violationsEl) violationsEl.textContent = violationsCount;
+    if (actionsEl) actionsEl.textContent = totalActions;
+}
 
-
-
-// متغير لتخزين المخالفة الجاري تعديلها
+// ====================== متغير لتخزين المخالفة الجاري تعديلها ======================
 let editingViolationId = null;
 
-// فتح نافذة تعديل المخالفة
+// ====================== فتح نافذة تعديل المخالفة ======================
 window.editViolation = async function(violationId) {
     const violation = violations.find(v => v._id === violationId);
     if (!violation) {
-        showToast('لم يتم العثور على المخالفة!', 'error');
+        showToast('❌ لم يتم العثور على المخالفة!', 'error');
         return;
     }
     
@@ -556,15 +570,17 @@ window.editViolation = async function(violationId) {
         submitBtn.style.color = '#1a2526';
     }
     
+    // إظهار زر إلغاء التعديل
+    const cancelBtn = document.getElementById('cancelEditViolationBtn');
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    
     // التمرير إلى النموذج
     document.querySelector('#add-violation-form').scrollIntoView({ behavior: 'smooth' });
     
-    showToast('قم بتعديل البيانات ثم اضغط تحديث', 'info');
+    showToast('✏️ قم بتعديل البيانات ثم اضغط تحديث', 'info');
 };
 
-
-
-    // زر إلغاء التعديل
+// ====================== إلغاء التعديل ======================
 document.getElementById('cancelEditViolationBtn')?.addEventListener('click', function() {
     editingViolationId = null;
     document.querySelector('#add-violation-form').reset();
@@ -575,20 +591,11 @@ document.getElementById('cancelEditViolationBtn')?.addEventListener('click', fun
         submitBtn.style.color = '';
     }
     this.style.display = 'none';
-    showToast('تم إلغاء التعديل', 'info');
+    showToast('✅ تم إلغاء التعديل', 'info');
 });
 
-// إظهار زر إلغاء التعديل عند التعديل
-window.editViolation = async function(violationId) {
-    // ... الكود السابق ...
-    
-    // إظهار زر إلغاء التعديل
-    const cancelBtn = document.getElementById('cancelEditViolationBtn');
-    if (cancelBtn) cancelBtn.style.display = 'inline-block';
-};
-
-    
- document.getElementById('add-violation-form')?.addEventListener('submit', async function(e) {
+// ====================== إضافة أو تحديث المخالفة ======================
+document.getElementById('add-violation-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const studentId = document.getElementById('violation-student-id').value.trim();
     const type = document.getElementById('violation-type').value;
@@ -598,13 +605,13 @@ window.editViolation = async function(violationId) {
     const customParentPhone = document.getElementById('parent-phone')?.value.trim();
 
     if (!studentId || !reason || !penalty) {
-        showToast('يرجى إدخال جميع الحقول المطلوبة!', 'error');
+        showToast('⚠️ يرجى إدخال جميع الحقول المطلوبة!', 'error');
         return;
     }
 
     const student = students.find(s => s.studentCode === studentId);
     if (!student) {
-        showToast('رقم الجلوس غير موجود! يرجى التأكد من رقم الجلوس.', 'error');
+        showToast('❌ رقم الجلوس غير موجود! يرجى التأكد من رقم الجلوس.', 'error');
         return;
     }
 
@@ -620,6 +627,7 @@ window.editViolation = async function(violationId) {
         if (response) {
             violations = await getFromServer('/api/violations');
             renderViolations();
+            updateViolationsStats();
             showToast(`✅ تم تحديث ${type === 'warning' ? 'الإنذار' : 'المخالفة'} بنجاح!`, 'success');
             
             // إعادة تعيين وضع التعديل
@@ -630,6 +638,8 @@ window.editViolation = async function(violationId) {
                 submitBtn.style.background = '';
                 submitBtn.style.color = '';
             }
+            const cancelBtn = document.getElementById('cancelEditViolationBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
             this.reset();
         }
     } else {
@@ -641,6 +651,7 @@ window.editViolation = async function(violationId) {
         if (response) {
             violations = await getFromServer('/api/violations');
             renderViolations();
+            updateViolationsStats();
             showToast(`✅ تم إضافة ${type === 'warning' ? 'إنذار' : 'مخالفة'} بنجاح!`, 'success');
             this.reset();
             
@@ -654,79 +665,14 @@ window.editViolation = async function(violationId) {
     }
 });
 
-
-    // ====================== إرسال إشعار واتساب لولي الأمر ======================
-async function sendWhatsAppNotification(parentPhone, studentName, violationType, reason, penalty) {
-    // تنظيف رقم الهاتف (إزالة أي أحرف غير أرقام)
-    let cleanPhone = parentPhone.replace(/[^0-9]/g, '');
-    
-    // التأكد من أن الرقم يبدأ بكود مصر (20)
-    if (cleanPhone.startsWith('0')) {
-        cleanPhone = '20' + cleanPhone.substring(1);
-    }
-    if (!cleanPhone.startsWith('20')) {
-        cleanPhone = '20' + cleanPhone;
-    }
-    
-    // إنشاء نص الرسالة
-    const message = `📢 *تنبيه من مدرسة معهد رعاية الضبعية للتمريض*\n\n` +
-                    `👨‍🎓 الطالب: ${studentName}\n` +
-                    `⚠️ نوع التنبيه: ${violationType === 'warning' ? 'إنذار' : 'مخالفة'}\n` +
-                    `📝 السبب: ${reason}\n` +
-                    `⚖️ العقوبة: ${penalty}\n` +
-                    `📅 التاريخ: ${new Date().toLocaleString('ar-EG')}\n\n` +
-                    `يرجى متابعة الطالب واتخاذ اللازم.`;
-    
-    // تشفير الرسالة للرابط
-    const encodedMessage = encodeURIComponent(message);
-    
-    // رابط واتساب المباشر
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-    
-    // فتح نافذة واتساب في تبويب جديد
-    window.open(whatsappUrl, '_blank');
-    
-    return whatsappUrl;
-}
-
-
-    // دالة لإعادة إرسال إشعار واتساب لمخالفة موجودة
-window.resendViolationWhatsApp = async function(violationId) {
-    const violation = violations.find(v => v._id === violationId);
-    if (!violation) {
-        showToast('لم يتم العثور على المخالفة!', 'error');
-        return;
-    }
-    
-    const student = students.find(s => s.studentCode === violation.studentId);
-    if (!student) {
-        showToast('لم يتم العثور على الطالب!', 'error');
-        return;
-    }
-    
-    const parentPhone = student.profile?.parentId;
-    if (!parentPhone || parentPhone.length < 10) {
-        showToast('رقم ولي الأمر غير مسجل لهذا الطالب!', 'error');
-        return;
-    }
-    
-    showToast('جاري فتح واتساب لإرسال الإشعار...', 'info');
-    await sendWhatsAppNotification(
-        parentPhone, 
-        student.fullName, 
-        violation.type, 
-        violation.reason, 
-        violation.penalty
-    );
-};
-    
-
-  window.deleteViolation = async function(id) {
+// ====================== حذف المخالفة ======================
+window.deleteViolation = async function(id) {
     if (confirm('⚠️ هل أنت متأكد من حذف هذا الإنذار/المخالفة؟ لا يمكن التراجع!')) {
         const response = await saveToServer(`/api/violations/${id}`, {}, 'DELETE');
         if (response) {
             violations = await getFromServer('/api/violations');
             renderViolations();
+            updateViolationsStats();
             showToast('🗑️ تم حذف الإنذار/المخالفة بنجاح.', 'success');
             
             // إذا كنا نعدل نفس المخالفة، قم بإلغاء وضع التعديل
@@ -746,16 +692,69 @@ window.resendViolationWhatsApp = async function(violationId) {
     }
 };
 
-    function updateViolationsStats() {
-    const warnings = violations.filter(v => v.type === 'warning').length;
-    const violationsCount = violations.filter(v => v.type === 'violation').length;
+// ====================== إرسال إشعار واتساب لولي الأمر ======================
+async function sendWhatsAppNotification(parentPhone, studentName, violationType, reason, penalty) {
+    // تنظيف رقم الهاتف (إزالة أي أحرف غير أرقام)
+    let cleanPhone = parentPhone.replace(/[^0-9]/g, '');
     
-    document.getElementById('totalWarnings').textContent = warnings;
-    document.getElementById('totalViolations').textContent = violationsCount;
+    // التأكد من أن الرقم يبدأ بكود مصر (20)
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '20' + cleanPhone.substring(1);
+    }
+    if (!cleanPhone.startsWith('20')) {
+        cleanPhone = '20' + cleanPhone;
+    }
+    
+    // إنشاء نص الرسالة
+    const message = `📢 *تنبيه من معهد رعاية الضبعية الفني للتمريض*\n\n` +
+                    `👨‍🎓 الطالب: ${studentName}\n` +
+                    `⚠️ نوع التنبيه: ${violationType === 'warning' ? 'إنذار' : 'مخالفة'}\n` +
+                    `📝 السبب: ${reason}\n` +
+                    `⚖️ العقوبة: ${penalty}\n` +
+                    `📅 التاريخ: ${new Date().toLocaleString('ar-EG')}\n\n` +
+                    `يرجى متابعة الطالب واتخاذ اللازم.`;
+    
+    // تشفير الرسالة للرابط
+    const encodedMessage = encodeURIComponent(message);
+    
+    // رابط واتساب المباشر
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    
+    // فتح نافذة واتساب في تبويب جديد
+    window.open(whatsappUrl, '_blank');
+    
+    return whatsappUrl;
 }
 
-// استدعاءها بعد كل تعديل على المخالفات
-
+// ====================== إعادة إرسال إشعار واتساب لمخالفة موجودة ======================
+window.resendViolationWhatsApp = async function(violationId) {
+    const violation = violations.find(v => v._id === violationId);
+    if (!violation) {
+        showToast('❌ لم يتم العثور على المخالفة!', 'error');
+        return;
+    }
+    
+    const student = students.find(s => s.studentCode === violation.studentId);
+    if (!student) {
+        showToast('❌ لم يتم العثور على الطالب!', 'error');
+        return;
+    }
+    
+    const parentPhone = student.profile?.parentId;
+    if (!parentPhone || parentPhone.length < 10) {
+        showToast('⚠️ رقم ولي الأمر غير مسجل لهذا الطالب!', 'error');
+        return;
+    }
+    
+    showToast('📱 جاري فتح واتساب لإرسال الإشعار...', 'info');
+    await sendWhatsAppNotification(
+        parentPhone, 
+        student.fullName, 
+        violation.type, 
+        violation.reason, 
+        violation.penalty
+    );
+};
     window.processText = async function() {
         const textInput = document.getElementById('text-input')?.value.trim();
         if (!textInput) {
