@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-  function renderResults(filter = '') {
+ function renderResults(filter = '') {
     const tableBody = document.getElementById('results-table-body');
     if (tableBody) {
         tableBody.innerHTML = '';
@@ -176,7 +176,11 @@ document.addEventListener('DOMContentLoaded', function() {
             "علوم تطبيقية",
             "طب باطنة",
             "تمريض باطني جراحي",
-            "حاسب آلي",
+            "حاسب آلي"
+        ];
+        
+        // المواد الإضافية خارج المجموع
+        const extraSubjects = [
             "الدين"
         ];
         
@@ -187,11 +191,14 @@ document.addEventListener('DOMContentLoaded', function() {
             "علوم تطبيقية": 40,
             "طب باطنة": 20,
             "تمريض باطني جراحي": 24,
-            "حاسب آلي": 20,
-            "الدين": 30
+            "حاسب آلي": 20
         };
         
-        const TOTAL_POSSIBLE = 174;
+        const extraSubjectMax = {
+            "الدين": 32
+        };
+        
+        const TOTAL_POSSIBLE = 144; // المجموع الكلي بدون الدين (20+20+40+20+24+20 = 144)
         
         // تصفية: عرض الطلاب اللي عندهم درجات فقط
         const studentsWithGrades = students.filter(student => 
@@ -204,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
         );
         
         filteredStudents.forEach(student => {
-            // حساب المجموع حسب المواد الجديدة
+            // حساب المجموع (بدون الدين)
             let total = 0;
             const subjectGrades = [];
             
@@ -213,6 +220,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const grade = subject ? (subject.grade || 0) : 0;
                 subjectGrades.push({ name: subjName, grade: grade });
                 total += grade;
+            });
+            
+            // إضافة المواد خارج المجموع (الدين)
+            extraSubjects.forEach(subjName => {
+                const subject = student.subjects.find(s => s.name === subjName);
+                const grade = subject ? (subject.grade || 0) : 0;
+                subjectGrades.push({ name: subjName + " (خارج المجموع)", grade: grade, isExtra: true });
             });
             
             const percentage = (total / TOTAL_POSSIBLE) * 100;
@@ -240,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     <button class="edit-btn" onclick="editStudent('${student.studentCode}')"><i class="fas fa-edit"></i></button>
                     <button class="delete-btn" onclick="deleteStudent('${student.studentCode}')"><i class="fas fa-trash"></i></button>
-                </td>
+                 </td>
             `;
             tableBody.appendChild(row);
         });
@@ -249,24 +263,23 @@ document.addEventListener('DOMContentLoaded', function() {
 function renderStats() {
     const statsSection = document.getElementById('stats-section');
     if (statsSection) {
-        // تصفية: الطلاب اللي عندهم درجات فقط (subjects مش فاضي)
+        // تصفية: الطلاب اللي عندهم درجات فقط
         const studentsWithGrades = students.filter(s => s.subjects && s.subjects.length > 0);
         const totalStudents = studentsWithGrades.length;
         
-        // تعريف المواد والدرجات النهائية لكل مادة (المجموع الكلي 174)
+        // تعريف المواد والدرجات النهائية لكل مادة (بدون الدين - خارج المجموع)
         const subjectMaxGrades = {
             "اللغة العربية": 20,
             "اللغة الإنجليزية": 20,
             "علوم تطبيقية": 40,
             "طب باطنة": 20,
             "تمريض باطني جراحي": 24,
-            "حاسب آلي": 20,
-            "الدين": 30
+            "حاسب آلي": 20
         };
         
-        const TOTAL_POSSIBLE = 174; // المجموع الكلي
+        const TOTAL_POSSIBLE = 144; // المجموع الكلي (بدون الدين)
         
-        // حساب النسبة المئوية لكل طالب
+        // حساب النسبة المئوية لكل طالب (بدون الدين)
         const studentPercentages = studentsWithGrades.map(student => {
             let totalEarned = 0;
             let totalPossible = 0;
@@ -305,7 +318,7 @@ function renderStats() {
         const passingStudents = sortedByPercentage.filter(p => p.percentage >= 60).length;
         const failingStudents = totalStudents - passingStudents;
         
-        // حساب أعلى درجة في كل مادة
+        // حساب أعلى درجة في كل مادة (بدون الدين)
         const highestGrades = Object.keys(subjectMaxGrades).map(subject => {
             let maxGrade = 0;
             let topStudentName = "";
@@ -321,7 +334,27 @@ function renderStats() {
             return { subject, maxGrade, maxPossible: subjectMaxGrades[subject], topStudent: topStudentName, topStudentCode: topStudentCode };
         });
         
-        // حساب متوسط كل مادة
+        // حساب أعلى درجة في المواد خارج المجموع (الدين)
+        const extraSubjectGrades = {
+            "الدين": 32
+        };
+        
+        const extraHighestGrades = Object.keys(extraSubjectGrades).map(subject => {
+            let maxGrade = 0;
+            let topStudentName = "";
+            let topStudentCode = "";
+            studentsWithGrades.forEach(student => {
+                const subj = student.subjects.find(s => s.name === subject);
+                if (subj && (subj.grade || 0) > maxGrade) {
+                    maxGrade = subj.grade || 0;
+                    topStudentName = student.fullName;
+                    topStudentCode = student.studentCode;
+                }
+            });
+            return { subject, maxGrade, maxPossible: extraSubjectGrades[subject], topStudent: topStudentName, topStudentCode: topStudentCode };
+        });
+        
+        // حساب متوسط كل مادة (بدون الدين)
         const subjectAverages = Object.keys(subjectMaxGrades).map(subject => {
             let total = 0;
             let count = 0;
@@ -371,7 +404,7 @@ function renderStats() {
             
             <div class="stats-grid" style="margin-top: 20px;">
                 <div class="stat-item">
-                    <p><i class="fas fa-chart-bar"></i> <strong>📊 أعلى الدرجات في كل مادة</strong></p>
+                    <p><i class="fas fa-chart-bar"></i> <strong>📊 أعلى الدرجات في المواد الأساسية</strong></p>
                 </div>
                 ${highestGrades.map(item => `
                     <div class="stat-item">
@@ -384,7 +417,20 @@ function renderStats() {
             
             <div class="stats-grid" style="margin-top: 20px;">
                 <div class="stat-item">
-                    <p><i class="fas fa-chart-line"></i> <strong>📈 متوسط الدرجات</strong></p>
+                    <p><i class="fas fa-chart-bar"></i> <strong>📖 أعلى الدرجات في المواد الإضافية (خارج المجموع)</strong></p>
+                </div>
+                ${extraHighestGrades.map(item => `
+                    <div class="stat-item">
+                        <p><i class="fas fa-star"></i> <strong>${item.subject}</strong><br>
+                        ${item.maxGrade} / ${item.maxPossible}<br>
+                        <small style="color: #666;">الطالب: ${item.topStudent || '-'} (${item.topStudentCode || ''})</small></p>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="stats-grid" style="margin-top: 20px;">
+                <div class="stat-item">
+                    <p><i class="fas fa-chart-line"></i> <strong>📈 متوسط الدرجات (المواد الأساسية)</strong></p>
                 </div>
                 ${subjectAverages.map(item => `
                     <div class="stat-item">
@@ -396,7 +442,6 @@ function renderStats() {
         `;
     }
 }
-
     function renderNotifications() {
         const tableBody = document.getElementById('notifications-table-body');
         if (tableBody) {
