@@ -2,20 +2,23 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>معهد رعاية الضبعية الفني للتمريض</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a2526">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aldabeia">
+    <link rel="apple-touch-icon" href="/logo.png">
+    
     <link rel="stylesheet" href="index.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7676282531413677"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7676282531413677" crossorigin="anonymous"></script>
     <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
     <div class="splash-wrapper">
-        <div class="medical-decor">
-            <span class="decor heart"></span>
-            <span class="decor cross"></span>
-            <span class="decor stethoscope"></span>
-        </div>
         <div class="splash-header">
             <img src="logo.png" alt="شعار معهد رعاية الضبعية" class="splash-logo">
         </div>
@@ -31,12 +34,6 @@
     </div>
 
     <footer class="elegant-footer">
-        <div class="wave-layer"></div>
-        <div class="footer-decor">
-            <span class="decor heart"></span>
-            <span class="decor cross"></span>
-            <span class="decor stethoscope"></span>
-        </div>
         <p>Developed by Ahmed Moussa <span class="heart">❤</span></p>
     </footer>
 
@@ -44,9 +41,7 @@
         // تأثير Typing
         const typingElement = document.querySelector('.typing-text');
         const texts = ['مرحبًا بكم في نظام النتائج', 'اكتشف نتيجتك بسهولة', 'ابدأ رحلتك التعليمية'];
-        let textIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
+        let textIndex = 0, charIndex = 0, isDeleting = false;
 
         function type() {
             const currentText = texts[textIndex];
@@ -67,13 +62,21 @@
                 setTimeout(type, 500);
             }
         }
-
         type();
 
-        // الانتقال بعد 15 ثانية
+        // تسجيل Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker registered'))
+                    .catch(err => console.log('❌ Service Worker failed:', err));
+            });
+        }
+
+        // الانتقال بعد 3 ثواني
         setTimeout(() => {
             window.location.href = 'login.html';
-        }, 14000);
+        }, 3000);
     </script>
 </body>
 </html>
