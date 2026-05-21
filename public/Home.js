@@ -370,6 +370,38 @@ document.addEventListener('DOMContentLoaded', async function() {
             .catch(err => console.log('❌ SW failed:', err));
     }
 
+
+    // ====================== تثبيت التطبيق (PWA) ======================
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('installAppBtn');
+    if (installBtn) {
+        installBtn.style.display = 'inline-block';
+        installBtn.onclick = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('✅ User accepted install');
+                    showToast('✅ تم تثبيت التطبيق بنجاح!', 'success');
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        };
+    }
+});
+
+// التحقق من أن التطبيق مثبت
+window.addEventListener('appinstalled', () => {
+    console.log('✅ App installed successfully');
+    showToast('🎉 شكراً لتثبيت التطبيق!', 'success');
+});
+    
+
     // ====================== دالة عرض التنبيهات ======================
     function showToast(message, type = 'success') {
         const bg = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
