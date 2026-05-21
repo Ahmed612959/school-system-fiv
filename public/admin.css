@@ -1688,3 +1688,88 @@ html, body {
         font-size: 1rem;
     }
 }
+
+/* ====================== إصلاح جدول المخالفات نهائياً ====================== */
+.violations-section .violations-table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 15px 0;
+}
+
+.violations-section .violations-table .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.violations-section table {
+    min-width: 900px;
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+}
+
+.violations-section th,
+.violations-section td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #d4af37;
+    vertical-align: middle;
+}
+
+.violations-section th {
+    background: #1a2526;
+    color: #d4af37;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* تثبيت عمود الإجراءات في مكانه */
+.violations-section td:last-child,
+.violations-section th:last-child {
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+/* تصغير الأزرار */
+.violations-section .edit-btn,
+.violations-section .delete-btn,
+.violations-section .whatsapp-btn {
+    padding: 5px 8px;
+    margin: 2px;
+    font-size: 11px;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+.violations-section .edit-btn i,
+.violations-section .delete-btn i,
+.violations-section .whatsapp-btn i {
+    font-size: 11px;
+}
+
+/* للشاشات الصغيرة جداً */
+@media (max-width: 768px) {
+    .violations-section table {
+        min-width: 700px;
+    }
+    
+    .violations-section th,
+    .violations-section td {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+    
+    .violations-section td:last-child,
+    .violations-section th:last-child {
+        min-width: 100px;
+    }
+    
+    .violations-section .edit-btn,
+    .violations-section .delete-btn,
+    .violations-section .whatsapp-btn {
+        padding: 3px 5px;
+        font-size: 9px;
+    }
+}
