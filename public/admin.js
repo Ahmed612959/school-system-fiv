@@ -99,59 +99,99 @@ document.addEventListener('DOMContentLoaded', function() {
     let notifications = [];
     let violations = [];
 
-    async function loadInitialData() {
+   async function loadInitialData() {
+    try {
+        // تحميل البيانات بالترتيب
         admins = await getFromServer('/api/admins');
+        console.log('تم تحميل الأدمن:', admins.length);
+        
         students = await getFromServer('/api/students');
+        console.log('تم تحميل الطلاب:', students.length);
+        
         notifications = await getFromServer('/api/notifications');
         violations = await getFromServer('/api/violations');
+        
+        // عرض البيانات
         renderAdmins();
         renderResults();
         renderStats();
         renderNotifications();
         renderViolations();
         updateViolationsStats();
+    } catch (error) {
+        console.error('خطأ في تحميل البيانات:', error);
+        showToast('حدث خطأ في تحميل البيانات', 'error');
     }
-
+}
+    
     function renderAdmins() {
-        const tableBody = document.getElementById('users-table-body');
-        if (tableBody) {
-            tableBody.innerHTML = '';
-            admins.forEach(admin => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${admin.fullName}</td>
-                    <td>${admin.username}</td>
-                    <td>
-                        <button class="delete-btn" onclick="deleteAdmin('${admin.username}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
+    const tableBody = document.getElementById('users-table-body');
+    if (!tableBody) {
+        console.warn('عنصر users-table-body غير موجود في الصفحة');
+        return;
     }
-
-    document.getElementById('add-user-form')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const fullName = document.getElementById('admin-name').value.trim();
-        const username = document.getElementById('admin-username').value.trim();
-        const password = document.getElementById('admin-password').value.trim();
-
-        if (!fullName || !username || !password) {
-            showToast('يرجى إدخال الاسم الكامل، اسم المستخدم، وكلمة المرور!', 'error');
+    
+    try {
+        tableBody.innerHTML = '';
+        
+        // ✅ التحقق من وجود الأدمن وأنهم مصفوفة
+        const adminsList = Array.isArray(admins) ? admins : [];
+        
+        if (adminsList.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا يوجد أدمن حالياً</td></tr>';
             return;
         }
+        
+        adminsList.forEach(admin => {
+            // ✅ التحقق من وجود البيانات المطلوبة
+            const fullName = admin.fullName || 'غير معروف';
+            const username = admin.username || 'غير معروف';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="border: 1px solid #ddd; padding: 8px;">${fullName}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${username}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">
+                    <button class="delete-btn" onclick="deleteAdmin('${username}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        console.log(`✅ تم عرض ${adminsList.length} أدمن بنجاح`);
+    } catch (error) {
+        console.error('خطأ في renderAdmins:', error);
+        showToast('حدث خطأ في عرض قائمة الأدمن', 'error');
+    }
+}
+    
+  document.getElementById('add-user-form')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('admin-name').value.trim();
+    const username = document.getElementById('admin-username').value.trim();
+    const password = document.getElementById('admin-password').value.trim();
 
+    if (!fullName || !username || !password) {
+        showToast('يرجى إدخال الاسم الكامل، اسم المستخدم، وكلمة المرور!', 'error');
+        return;
+    }
+
+    try {
         const response = await saveToServer('/api/admins', { fullName, username, password });
         if (response) {
+            // ✅ إعادة تحميل الأدمن من السيرفر
             admins = await getFromServer('/api/admins');
-            renderAdmins();
+            renderAdmins(); // ✅ إعادة عرض الجدول
             showToast(`تم إضافة الأدمن بنجاح!\nاسم المستخدم: ${username}\nكلمة المرور: ${password}`, 'success');
             this.reset();
         } else {
             showToast('فشل إضافة الأدمن! تحقق من اسم المستخدم.', 'error');
         }
-    });
-
+    } catch (error) {
+        console.error('خطأ في إضافة الأدمن:', error);
+        showToast('حدث خطأ أثناء إضافة الأدمن', 'error');
+    }
+});
     window.deleteAdmin = async function(username) {
         if (confirm('هل أنت متأكد من حذف هذا الأدمن؟')) {
             const response = await saveToServer(`/api/admins/${username}`, {}, 'DELETE');
