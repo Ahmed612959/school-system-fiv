@@ -71,7 +71,7 @@
                             </tr>
                         </thead>
                         <tbody id="users-table-body"></tbody>
-                    </table>
+                    <tr>
                 </div>
             </div>
         </div>
@@ -218,6 +218,7 @@
             </div>
         </div>
         <button id="export-excel" class="submit-btn">تصدير النتائج إلى Excel</button>
+        
         <section class="violations-section">
     <h2>إدارة الإنذارات والمخالفات</h2>
     <form id="add-violation-form">
@@ -246,17 +247,39 @@
             </label>
         </div>
         <div class="input-group">
-    <label for="parent-phone">رقم ولي الأمر (واتساب - اختياري)</label>
-    <input type="tel" id="parent-phone" placeholder="مثال: 01012345678 أو 201012345678">
-    <small style="color: #666;">إذا تركته فارغاً، سيتم استخدام رقم ولي الأمر المسجل في ملف الطالب</small>
-</div>
-        <button type="submit" class="submit-btn">إضافة إنذار/مخالفة</button>
+            <label for="parent-phone">رقم ولي الأمر (واتساب - اختياري)</label>
+            <input type="tel" id="parent-phone" placeholder="مثال: 01012345678 أو 201012345678">
+            <small style="color: #666;">إذا تركته فارغاً، سيتم استخدام رقم ولي الأمر المسجل في ملف الطالب</small>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="submit-btn">إضافة إنذار/مخالفة</button>
+            <button type="button" id="cancelEditViolationBtn" class="submit-btn" style="background:#6c757d; display:none;">
+                <i class="fas fa-times"></i> إلغاء التعديل
+            </button>
+        </div>
     </form>
+
+    <!-- إحصائيات المخالفات -->
+    <div class="violations-stats" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #d4af37;">
+        <h4 style="margin-bottom: 10px; color: #1a2526;">📊 إحصائيات المخالفات</h4>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="background: #fff3cd; padding: 8px 15px; border-radius: 20px;">
+                <strong>⚠️ إجمالي الإنذارات:</strong> <span id="totalWarnings" style="color: #ffc107;">0</span>
+            </div>
+            <div style="background: #f8d7da; padding: 8px 15px; border-radius: 20px;">
+                <strong>🚫 إجمالي المخالفات:</strong> <span id="totalViolations" style="color: #dc3545;">0</span>
+            </div>
+            <div style="background: #d4edda; padding: 8px 15px; border-radius: 20px;">
+                <strong>📞 إجمالي الإجراءات:</strong> <span id="totalActions" style="color: #28a745;">0</span>
+            </div>
+        </div>
+    </div>
 
     <h3>قائمة الإنذارات والمخالفات</h3>
     <div class="violations-table">
         <div class="table-wrapper">
-            <table>
+            <tr>
                 <thead>
                     <tr>
                         <th>رقم الجلوس</th>
@@ -276,10 +299,6 @@
 
         <h2>إحصائيات</h2>
         <div class="stats-section" id="stats-section"></div>
-
-
-
-
 
        <!-- قسم إنشاء الاختبارات الإلكترونية -->
 <section class="exams-section">
@@ -363,9 +382,6 @@
     <button class="scroll-btn scroll-up" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
     <button class="scroll-btn scroll-down" onclick="scrollToBottom()"><i class="fas fa-arrow-down"></i></button>
 
-
-
-    
     <!-- أضف هذين السطرين فقط -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="admin.js"></script>
