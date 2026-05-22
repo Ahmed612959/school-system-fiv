@@ -241,41 +241,40 @@
             <input type="text" id="violation-penalty" required>
         </div>
         <div class="input-group">
-            <label for="parent-summons">
+            <label>
                 <input type="checkbox" id="parent-summons"> استدعاء ولي الأمر
             </label>
         </div>
         <div class="input-group">
-    <label for="parent-phone">رقم ولي الأمر (واتساب - اختياري)</label>
-    <input type="tel" id="parent-phone" placeholder="مثال: 01012345678 أو 201012345678">
-    <small style="color: #666;">إذا تركته فارغاً، سيتم استخدام رقم ولي الأمر المسجل في ملف الطالب</small>
-</div>
+            <label for="parent-phone">رقم ولي الأمر (واتساب - اختياري)</label>
+            <input type="tel" id="parent-phone" placeholder="مثال: 01012345678">
+        </div>
         <button type="submit" class="submit-btn">إضافة إنذار/مخالفة</button>
-<button type="button" id="cancelEditViolationBtn" class="submit-btn" style="display:none; background:#6c757d; margin-top:5px;">
-    ❌ إلغاء التعديل
-</button>
+        <button type="button" id="cancelEditViolationBtn" class="submit-btn" onclick="cancelEditViolation()" style="display:none; background:#6c757d; margin-top:10px;">
+            ❌ إلغاء التعديل
+        </button>
     </form>
 
     <h3>قائمة الإنذارات والمخالفات</h3>
-<div class="violations-table">
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>رقم الجلوس</th>
-                    <th>اسم الطالب</th>
-                    <th>النوع</th>
-                    <th>السبب</th>
-                    <th>العقوبة</th>
-                    <th>استدعاء ولي الأمر</th>
-                    <th>تاريخ الإضافة</th>
-                    <th>الإجراء</th>
-                </tr>
-            </thead>
-            <tbody id="violations-table-body"></tbody>
-        </table>
+    <div class="violations-table">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الجلوس</th>
+                        <th>اسم الطالب</th>
+                        <th>النوع</th>
+                        <th>السبب</th>
+                        <th>العقوبة</th>
+                        <th>استدعاء ولي الأمر</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="violations-table-body"></tbody>
+            </table>
+        </div>
     </div>
-</div>
 </section>
 
         <h2>إحصائيات</h2>
