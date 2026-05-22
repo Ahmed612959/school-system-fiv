@@ -1205,13 +1205,14 @@ html, body {
         font-size: 0.55em !important;
         padding: 2px !important;
     }
-    .violations-table th:nth-child(1), .violations-table td:nth-child(1) { min-width: 20px; }
-    .violations-table th:nth-child(2), .violations-table td:nth-child(2) { min-width: 20px; }
-    .violations-table th:nth-child(3), .violations-table td:nth-child(3) { min-width: 50px; }
-    .violations-table th:nth-child(4), .violations-table td:nth-child(4) { min-width: 45px; }
-    .violations-table th:nth-child(5), .violations-table td:nth-child(5) { min-width: 15px; }
-    .violations-table th:nth-child(6), .violations-table td:nth-child(6) { min-width: 35px; }
-    .violations-table th:nth-child(7), .violations-table td:nth-child(7) { min-width: 15px; }
+    /* تعديل عرض أعمدة جدول المخالفات بعد حذف عمود التاريخ */
+.violations-table th:nth-child(1), .violations-table td:nth-child(1) { width: 8%; }  /* رقم الجلوس */
+.violations-table th:nth-child(2), .violations-table td:nth-child(2) { width: 15%; } /* اسم الطالب */
+.violations-table th:nth-child(3), .violations-table td:nth-child(3) { width: 8%; }  /* النوع */
+.violations-table th:nth-child(4), .violations-table td:nth-child(4) { width: 25%; } /* السبب */
+.violations-table th:nth-child(5), .violations-table td:nth-child(5) { width: 15%; } /* العقوبة */
+.violations-table th:nth-child(6), .violations-table td:nth-child(6) { width: 10%; } /* استدعاء ولي الأمر */
+.violations-table th:nth-child(7), .violations-table td:nth-child(7) { width: 19%; } /* الإجراء */
     .violations-section select,
     .violations-section textarea,
     .violations-section input[type="text"] {
