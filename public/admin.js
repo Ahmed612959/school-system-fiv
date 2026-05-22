@@ -611,17 +611,21 @@ document.getElementById('add-violation-form')?.addEventListener('submit', async 
     const date = new Date().toLocaleString('ar-EG');
     
     // التحقق إذا كنا في وضع التعديل
-    if (editingViolationId) {
-        // تحديث المخالفة الموجودة
-        const response = await saveToServer(`/api/violations/${editingViolationId}`, { 
-            studentId, type, reason, penalty, parentSummons, date 
-        }, 'PUT');
-        
-        if (response) {
-            violations = await getFromServer('/api/violations');
-            renderViolations();
-            showToast(`✅ تم تحديث ${type === 'warning' ? 'الإنذار' : 'المخالفة'} بنجاح!`, 'success');
-            
+if (editingViolationId) {
+    // حذف القديم وإضافة الجديد لأن السيرفر لا يدعم PUT
+    await saveToServer(`/api/violations/${editingViolationId}`, {}, 'DELETE');
+    const response = await saveToServer('/api/violations', { 
+        studentId, type, reason, penalty, parentSummons, date 
+    });
+    
+    if (response) {
+        violations = await getFromServer('/api/violations');
+        renderViolations();
+        showToast(`✅ تم تحديث المخالفة بنجاح!`, 'success');
+        cancelEditViolation();
+        this.reset();
+    }
+}
             // إعادة تعيين وضع التعديل
             editingViolationId = null;
             const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
