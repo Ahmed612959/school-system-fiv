@@ -490,12 +490,15 @@ function renderStats() {
     // ====================== عرض قائمة الإنذارات والمخالفات (مع أزرار تعديل وحذف) ======================
 function renderViolations() {
     const tableBody = document.getElementById('violations-table-body');
-    if (!tableBody) return;
+    if (!tableBody) {
+        console.error('violations-table-body غير موجود');
+        return;
+    }
     
     tableBody.innerHTML = '';
     
     if (!violations || violations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد إنذارات أو مخالفات مسجلة</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">📭 لا توجد إنذارات أو مخالفات مسجلة</td></tr>';
         return;
     }
     
@@ -504,31 +507,29 @@ function renderViolations() {
         const studentName = student ? student.fullName : 'طالب غير موجود';
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td style="white-space: nowrap;">${violation.studentId || '-'}</td>
-            <td style="white-space: nowrap;">${studentName}</td>
-            <td style="white-space: nowrap;">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
-            <td style="max-width: 200px; word-break: break-word;">${violation.reason || '-'}</td>
-            <td style="white-space: nowrap;">${violation.penalty || '-'}</td>
-            <td style="white-space: nowrap;">${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
-            <td style="white-space: nowrap;">${violation.date || '-'}</td>
-            <td style="white-space: nowrap;">
-                <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; padding:5px 8px; margin:2px;">
+            <td>${violation.studentId || '-'}</td>
+            <td>${studentName}</td>
+            <td>${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
+            <td style="max-width:200px; word-break:break-word;">${violation.reason || '-'}</td>
+            <td>${violation.penalty || '-'}</td>
+            <td>${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
+            <td>
+                <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
                     <i class="fas fa-edit"></i> تعديل
                 </button>
-                <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; padding:5px 8px; margin:2px;">
+                <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
                     <i class="fas fa-trash"></i> حذف
                 </button>
-                <button class="whatsapp-btn" onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 8px; border-radius:4px; margin:2px; cursor:pointer;">
+                <button onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
                     <i class="fab fa-whatsapp"></i> واتساب
                 </button>
-            </td>
+             </td>
         `;
         tableBody.appendChild(row);
     });
     
-    console.log('✅ تم عرض', violations.length, 'مخالفة/إنذار');
-}
-
+    console.log('✅ تم عرض', violations.length, 'مخالفة');
+            }
 // ====================== متغير لتخزين المخالفة الجاري تعديلها ======================
 let editingViolationId = null;
 
