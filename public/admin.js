@@ -507,21 +507,21 @@ function renderViolations() {
         const studentName = student ? student.fullName : 'طالب غير موجود';
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${violation.studentId || '-'}</td>
-            <td>${studentName}</td>
-            <td>${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
+            <td style="white-space: nowrap;">${violation.studentId || '-'}</td>
+            <td style="white-space: nowrap;">${studentName}</td>
+            <td style="white-space: nowrap;">${violation.type === 'warning' ? '⚠️ إنذار' : '🚫 مخالفة'}</td>
             <td style="max-width:200px; word-break:break-word;">${violation.reason || '-'}</td>
-            <td>${violation.penalty || '-'}</td>
-            <td>${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
-            <td>
-                <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
-                    <i class="fas fa-edit"></i> تعديل
+            <td style="white-space: nowrap;">${violation.penalty || '-'}</td>
+            <td style="white-space: nowrap;">${violation.parentSummons ? '✅ نعم' : '❌ لا'}</td>
+            <td style="white-space: nowrap; min-width: 130px;">
+                <button class="edit-btn" onclick="editViolation('${violation._id}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; margin:2px; cursor:pointer; font-size:12px;">
+                    <i class="fas fa-edit"></i>
                 </button>
-                <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
-                    <i class="fas fa-trash"></i> حذف
+                <button class="delete-btn" onclick="deleteViolation('${violation._id}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; margin:2px; cursor:pointer; font-size:12px;">
+                    <i class="fas fa-trash"></i>
                 </button>
-                <button onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:5px 10px; border-radius:4px; margin:2px; cursor:pointer;">
-                    <i class="fab fa-whatsapp"></i> واتساب
+                <button onclick="resendViolationWhatsApp('${violation._id}')" style="background:#25D366; color:white; border:none; padding:4px 8px; border-radius:4px; margin:2px; cursor:pointer; font-size:12px;">
+                    <i class="fab fa-whatsapp"></i>
                 </button>
              </td>
         `;
@@ -529,7 +529,7 @@ function renderViolations() {
     });
     
     console.log('✅ تم عرض', violations.length, 'مخالفة');
-            }
+}
 // ====================== متغير لتخزين المخالفة الجاري تعديلها ======================
 let editingViolationId = null;
 
