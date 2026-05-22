@@ -588,8 +588,10 @@ function setupCancelEditButton() {
 }
 
 // ====================== إضافة أو تحديث المخالفة ======================
+// ====================== إضافة أو تحديث المخالفة ======================
 document.getElementById('add-violation-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
+    
     const studentId = document.getElementById('violation-student-id').value.trim();
     const type = document.getElementById('violation-type').value;
     const reason = document.getElementById('violation-reason').value.trim();
@@ -611,32 +613,44 @@ document.getElementById('add-violation-form')?.addEventListener('submit', async 
     const date = new Date().toLocaleString('ar-EG');
     
     // التحقق إذا كنا في وضع التعديل
-if (editingViolationId) {
-    // حذف القديم وإضافة الجديد لأن السيرفر لا يدعم PUT
-    await saveToServer(`/api/violations/${editingViolationId}`, {}, 'DELETE');
-    const response = await saveToServer('/api/violations', { 
-        studentId, type, reason, penalty, parentSummons, date 
-    });
-    
-    if (response) {
-        violations = await getFromServer('/api/violations');
-        renderViolations();
-        showToast(`✅ تم تحديث المخالفة بنجاح!`, 'success');
-        cancelEditViolation();
-        this.reset();
-    }
-}
-            // إعادة تعيين وضع التعديل
-            editingViolationId = null;
-            const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.textContent = 'إضافة إنذار/مخالفة';
-                submitBtn.style.background = '';
-                submitBtn.style.color = '';
+    if (editingViolationId) {
+        // حذف القديم وإضافة الجديد لأن السيرفر لا يدعم PUT
+        try {
+            // 1. حذف المخالفة القديمة
+            const deleteResponse = await saveToServer(`/api/violations/${editingViolationId}`, {}, 'DELETE');
+            
+            if (deleteResponse) {
+                // 2. إضافة المخالفة الجديدة بالبيانات المحدثة
+                const addResponse = await saveToServer('/api/violations', { 
+                    studentId, type, reason, penalty, parentSummons, date 
+                });
+                
+                if (addResponse) {
+                    // 3. إعادة تحميل البيانات وتحديث الجدول
+                    violations = await getFromServer('/api/violations');
+                    renderViolations();
+                    showToast(`✅ تم تحديث ${type === 'warning' ? 'الإنذار' : 'المخالفة'} بنجاح!`, 'success');
+                    
+                    // إعادة تعيين وضع التعديل
+                    editingViolationId = null;
+                    const submitBtn = document.querySelector('#add-violation-form button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'إضافة إنذار/مخالفة';
+                        submitBtn.style.background = '';
+                        submitBtn.style.color = '';
+                    }
+                    const cancelBtn = document.getElementById('cancelEditViolationBtn');
+                    if (cancelBtn) cancelBtn.style.display = 'none';
+                    this.reset();
+                } else {
+                    showToast('❌ فشل إضافة البيانات الجديدة!', 'error');
+                }
+            } else {
+                showToast('❌ فشل حذف المخالفة القديمة!', 'error');
             }
-            const cancelBtn = document.getElementById('cancelEditViolationBtn');
-            if (cancelBtn) cancelBtn.style.display = 'none';
-            this.reset();
+        } catch (error) {
+            console.error('خطأ في التحديث:', error);
+            showToast('❌ حدث خطأ أثناء تحديث المخالفة', 'error');
         }
     } else {
         // إضافة مخالفة جديدة
@@ -650,12 +664,18 @@ if (editingViolationId) {
             showToast(`✅ تم إضافة ${type === 'warning' ? 'إنذار' : 'مخالفة'} بنجاح!`, 'success');
             this.reset();
             
-            // إرسال إشعار واتساب
+            // إرسال إشعار واتساب لولي الأمر
             const parentPhone = customParentPhone || student.profile?.parentId;
             if (parentPhone && parentPhone.length >= 10) {
                 showToast('📱 جاري إرسال إشعار واتساب لولي الأمر...', 'info');
                 await sendWhatsAppNotification(parentPhone, student.fullName, type, reason, penalty);
+            } else if (customParentPhone) {
+                showToast('⚠️ رقم ولي الأمر غير صحيح! لم يتم إرسال الإشعار.', 'warning');
+            } else {
+                showToast('⚠️ لم يتم إرسال إشعار واتساب لأن رقم ولي الأمر غير مسجل.', 'warning');
             }
+        } else {
+            showToast('❌ فشل إضافة المخالفة!', 'error');
         }
     }
 });
