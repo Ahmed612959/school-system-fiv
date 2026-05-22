@@ -62,7 +62,10 @@
       gap: 14px;
       margin-bottom: 30px;
     }
-    .search-box input {
+    .input-group {
+      position: relative;
+    }
+    .input-group input {
       width: 100%;
       padding: 14px 18px;
       border-radius: 16px;
@@ -72,10 +75,21 @@
       transition: 0.25s;
       font-family: 'Tajawal', sans-serif;
     }
-    .search-box input:focus {
+    .input-group input:focus {
       outline: none;
       border-color: #4a6cf7;
       box-shadow: 0 0 0 4px rgba(74,108,247,0.15);
+    }
+    .input-group input.error {
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+    .error-msg {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+      font-weight: 500;
     }
     .search-box button {
       padding: 14px 30px;
@@ -184,11 +198,9 @@
       color: #64748b;
       font-weight: 500;
     }
-    .hint {
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 4px;
-      text-align: center;
+    .required-star {
+      color: #ef4444;
+      margin-left: 4px;
     }
   </style>
   <link rel="icon" type="image/png" href="/logo.png">
@@ -201,10 +213,15 @@
 
 <div class="container">
   <div class="search-box">
-    <input id="student-name" placeholder="🔍 الاسم (أي جزء منه)">
-    <input id="seat-number" placeholder="🔢 رقم الجلوس (اختياري)">
+    <div class="input-group">
+      <input id="student-name" placeholder="الاسم كاملاً أو جزء منه *" autocomplete="off">
+      <div class="error-msg" id="name-error">⚠️ برجاء إدخال الاسم</div>
+    </div>
+    <div class="input-group">
+      <input id="seat-number" placeholder="رقم الجلوس *" autocomplete="off">
+      <div class="error-msg" id="seat-error">⚠️ برجاء إدخال رقم الجلوس</div>
+    </div>
     <button onclick="searchResult()"><i class="fas fa-search"></i> عرض النتيجة</button>
-    <div class="hint">مثال: عبدالسلام أو عبد السلام، عبدالله أو عبد الله، ابراهيم أو إبراهيم</div>
   </div>
 
   <div id="result-container" style="display:none">
@@ -216,7 +233,7 @@
     <button class="share-btn" id="share-btn" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i> مشاركة على واتساب</button>
   </div>
 
-  <p id="no-result" class="no-result">❌ لا توجد نتيجة مطابقة. تأكد من الاسم أو رقم الجلوس.</p>
+  <p id="no-result" class="no-result">❌ لا توجد نتيجة مطابقة. تأكد من الاسم ورقم الجلوس.</p>
 </div>
 
 <div class="footer">Developed by Ahmed Moussa ❤️</div>
@@ -257,16 +274,16 @@
     "الدين":"🕌"
   };
 
-  // دالة تطبيع النص للبحث المرن (تتعامل مع عبدالسلام/عبد السلام، أ/إ/ا، ة/ه)
+  // تطبيع النص للبحث المرن
   function normalizeArabic(str) {
     if (!str) return '';
     return str
-      .replace(/[أإآا]/g, 'ا')       // توحيد الألفات
-      .replace(/ة/g, 'ه')            // التاء المربوطة إلى هاء
-      .replace(/ى/g, 'ي')            // الألف المقصورة إلى ياء
-      .replace(/\s+/g, ' ')          // إزالة المسافات الزائدة
-      .replace(/(عبد)\s+(ال|اله)/g, '$1$2') // عبد السلام -> عبدالسلام
-      .replace(/(عبد)\s+(الله)/g, '$1$2')   // عبد الله -> عبدالله
+      .replace(/[أإآا]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/\s+/g, ' ')
+      .replace(/(عبد)\s+(ال|اله)/g, '$1$2')
+      .replace(/(عبد)\s+(الله)/g, '$1$2')
       .trim()
       .toLowerCase();
   }
@@ -278,36 +295,52 @@
   }
 
   function searchResult() {
-    const rawName = document.getElementById("student-name").value.trim();
-    const rawSeat = document.getElementById("seat-number").value.trim();
+    const nameInput = document.getElementById("student-name");
+    const seatInput = document.getElementById("seat-number");
+    const nameError = document.getElementById("name-error");
+    const seatError = document.getElementById("seat-error");
+    
+    // إعادة ضبط رسائل الخطأ
+    nameError.style.display = "none";
+    seatError.style.display = "none";
+    nameInput.classList.remove("error");
+    seatInput.classList.remove("error");
+    
+    const rawName = nameInput.value.trim();
+    const rawSeat = seatInput.value.trim();
+    
+    let hasError = false;
+    
+    // التحقق من الحقول الإجبارية
+    if (!rawName) {
+      nameError.style.display = "block";
+      nameInput.classList.add("error");
+      hasError = true;
+    }
+    
+    if (!rawSeat) {
+      seatError.style.display = "block";
+      seatInput.classList.add("error");
+      hasError = true;
+    }
+    
+    if (hasError) {
+      document.getElementById("result-container").style.display = "none";
+      document.getElementById("no-result").style.display = "none";
+      return;
+    }
     
     const normalizedInputName = normalizeArabic(rawName);
-    const normalizedSeat = rawSeat.trim();
+    const normalizedSeat = rawSeat;
     
     const list = document.getElementById("subjects-list");
     list.innerHTML = "";
     
-    // إذا كان كلا الحقلين فارغين
-    if (!normalizedInputName && !normalizedSeat) {
-      document.getElementById("no-result").style.display = "block";
-      document.getElementById("result-container").style.display = "none";
-      return;
-    }
-
-    // البحث باستخدام المرونة الكاملة
+    // البحث بالحقلين معاً مع المرونة
     const student = results.find(s => {
       const normalizedStudentName = normalizeArabic(s.name);
-      
-      // مطابقة رقم الجلوس (إذا تم إدخاله)
-      const seatMatch = normalizedSeat ? (s.seat === normalizedSeat) : true;
-      
-      // مطابقة الاسم (إذا تم إدخاله) - أي جزء من الاسم بعد التطبيع
-      let nameMatch = true;
-      if (normalizedInputName) {
-        // البحث إذا كان النص المدخل موجوداً كجزء من الاسم المطبع
-        nameMatch = normalizedStudentName.includes(normalizedInputName);
-      }
-      
+      const seatMatch = (s.seat === normalizedSeat);
+      const nameMatch = normalizedStudentName.includes(normalizedInputName);
       return seatMatch && nameMatch;
     });
 
@@ -319,7 +352,6 @@
 
     document.getElementById("no-result").style.display = "none";
     
-    // عرض بيانات الطالب
     document.getElementById("student-info").innerHTML = `
       <h2 style="margin-bottom:6px;">${student.name}</h2>
       <div style="font-weight:600; color:#334155;">رقم الجلوس: ${student.seat}</div>
@@ -344,7 +376,6 @@
     document.getElementById("total").innerHTML = `<span>المجموع الكلي</span> <span>${total} / ${max}</span>`;
     document.getElementById("percent").innerHTML = `النسبة المئوية: ${percent}%`;
     
-    // حساب الترتيب
     const sorted = results.map(s => {
       let sum = 0, maxSum = 0;
       for (const sub in s.subjects) {
@@ -362,14 +393,19 @@
   }
 
   function shareWhatsApp() {
-    const rawName = document.getElementById("student-name").value.trim();
-    const rawSeat = document.getElementById("seat-number").value.trim();
+    const nameInput = document.getElementById("student-name");
+    const seatInput = document.getElementById("seat-number");
+    const rawName = nameInput.value.trim();
+    const rawSeat = seatInput.value.trim();
+    
+    if (!rawName || !rawSeat) return;
+    
     const normalizedInputName = normalizeArabic(rawName);
     
     const student = results.find(s => {
       const normalizedStudentName = normalizeArabic(s.name);
-      const seatMatch = rawSeat ? (s.seat === rawSeat.trim()) : true;
-      const nameMatch = normalizedInputName ? normalizedStudentName.includes(normalizedInputName) : true;
+      const seatMatch = (s.seat === rawSeat);
+      const nameMatch = normalizedStudentName.includes(normalizedInputName);
       return seatMatch && nameMatch;
     });
     
@@ -392,10 +428,20 @@
   // البحث عند الضغط على Enter
   document.getElementById("student-name").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchResult();
-  });
-  document.getElementById("seat-number").addEventListener("keypress", (e) => {
+  }); document.getElementById("seat-number").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchResult();
+  });
+
+  // إخفاء رسائل الخطأ عند الكتابة
+  document.getElementById("student-name").addEventListener("input", function() {
+    document.getElementById("name-error").style.display = "none";
+    this.classList.remove("error");
+  });
+  
+  document.getElementById("seat-number").addEventListener("input", function() {
+    document.getElementById("seat-error").style.display = "none";
+    this.classList.remove("error");
   });
 </script>
 </body>
-</html>
+  </html>
