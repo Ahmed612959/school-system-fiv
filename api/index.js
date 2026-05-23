@@ -6,136 +6,21 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
 const pdfParse = require('pdf-parse');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
 const app = express();
 
-// ====================== إعدادات الأمان المتقدمة ======================
-
-// 1. Helmet - حماية رؤوس HTTP
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://pagead2.googlesyndication.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "https://generativelanguage.googleapis.com", "https://api.deepseek.com"],
-        },
-    },
-}));
-
-// 2. CORS مقيد
-const allowedOrigins = [
-    'https://school-system-fiv.vercel.app',
-    'http://localhost:3000',
-    'https://school-system.vercel.app'
-];
-
+// ====================== MIDDLEWARE ======================
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            return callback(new Error('CORS policy violation'), false);
-        }
-        return callback(null, true);
-    },
-    credentials: true,
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// 3. Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { error: 'لقد تجاوزت الحد المسموح من الطلبات، حاول مرة أخرى بعد 15 دقيقة' },
-});
-
-app.use('/api/', limiter);
-
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: { error: 'محاولات تسجيل دخول كثيرة، حاول مرة أخرى بعد 15 دقيقة' },
-});
-
-// 4. إعدادات الجلسة
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
-const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex');
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-app.use(session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'strict'
-    }
-}));
-
-// ====================== دوال التشفير باستخدام scrypt ======================
-
-// تشفير كلمة المرور
-async function hashPassword(password) {
-    return new Promise((resolve, reject) => {
-        const salt = crypto.randomBytes(32).toString('hex');
-        crypto.scrypt(password, salt, 64, { N: 16384, r: 8, p: 1 }, (err, derivedKey) => {
-            if (err) reject(err);
-            resolve(`${salt}:${derivedKey.toString('hex')}`);
-        });
-    });
-}
-
-// التحقق من كلمة المرور
-async function verifyPassword(password, hash) {
-    return new Promise((resolve, reject) => {
-        const [salt, key] = hash.split(':');
-        crypto.scrypt(password, salt, 64, { N: 16384, r: 8, p: 1 }, (err, derivedKey) => {
-            if (err) reject(err);
-            resolve(key === derivedKey.toString('hex'));
-        });
-    });
-}
-
-// ====================== دوال الأمان ======================
-
-// Middleware التحقق من JWT
-function verifyToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ error: 'غير مصرح. يرجى تسجيل الدخول' });
-    }
-    
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.status(401).json({ error: 'جلسة غير صالحة، يرجى تسجيل الدخول مرة أخرى' });
-    }
-}
-
-// دالة التحقق من صلاحيات الأدمن
-function isAdmin(req, res, next) {
-    if (!req.user || req.user.type !== 'admin') {
-        return res.status(403).json({ error: 'غير مصرح. هذه الصفحة للأدمن فقط' });
-    }
-    next();
+// ====================== دالة التشفير ======================
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
 }
 
 // ====================== النماذج (Schemas) ======================
@@ -143,13 +28,8 @@ const adminSchema = new mongoose.Schema({
     fullName: String,
     username: { type: String, unique: true },
     password: String,
-    role: { type: String, default: 'admin' },
-    lastLogin: Date,
-    lastIP: String,
-    failedAttempts: { type: Number, default: 0 },
-    lockedUntil: Date,
     profile: { phone: String, email: String }
-}, { timestamps: true });
+});
 
 const studentSchema = new mongoose.Schema({
     fullName: String,
@@ -159,9 +39,6 @@ const studentSchema = new mongoose.Schema({
     grade: { type: String, enum: ['first', 'second', 'third'], default: 'first' },
     semester: String,
     subjects: Array,
-    role: { type: String, default: 'student' },
-    lastLogin: Date,
-    lastIP: String,
     profile: {
         phone: String,
         parentName: String,
@@ -218,6 +95,16 @@ const examResultSchema = new mongoose.Schema({
     completionTime: { type: Date, default: Date.now }
 });
 
+// إنشاء النماذج
+const Admin = mongoose.models.Admin || mongoose.model('Admin', adminSchema);
+const Student = mongoose.models.Student || mongoose.model('Student', studentSchema);
+const Violation = mongoose.models.Violation || mongoose.model('Violation', violationSchema);
+const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+const WeeklyQuiz = mongoose.models.WeeklyQuiz || mongoose.model('WeeklyQuiz', weeklyQuizSchema);
+const Exam = mongoose.models.Exam || mongoose.model('Exam', examSchema);
+const ExamResult = mongoose.models.ExamResult || mongoose.model('ExamResult', examResultSchema);
+
+// ====================== نموذج الحضور والغياب ======================
 const attendanceSchema = new mongoose.Schema({
     studentCode: { type: String, required: true },
     studentName: { type: String, required: true },
@@ -227,14 +114,6 @@ const attendanceSchema = new mongoose.Schema({
     recordedBy: { type: String, default: '' }
 });
 
-// إنشاء النماذج
-const Admin = mongoose.models.Admin || mongoose.model('Admin', adminSchema);
-const Student = mongoose.models.Student || mongoose.model('Student', studentSchema);
-const Violation = mongoose.models.Violation || mongoose.model('Violation', violationSchema);
-const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
-const WeeklyQuiz = mongoose.models.WeeklyQuiz || mongoose.model('WeeklyQuiz', weeklyQuizSchema);
-const Exam = mongoose.models.Exam || mongoose.model('Exam', examSchema);
-const ExamResult = mongoose.models.ExamResult || mongoose.model('ExamResult', examResultSchema);
 const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
 
 // ====================== الاتصال بقاعدة البيانات ======================
@@ -252,11 +131,11 @@ if (!MONGODB_URI) {
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 }
-
-// إعادة محاولة الاتصال
+// إعادة محاولة الاتصال إذا فشل
 mongoose.connection.on('error', (err) => {
     console.error('❌ MongoDB connection error:', err);
     setTimeout(() => {
+        console.log('🔄 Attempting to reconnect to MongoDB...');
         mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 30000,
             socketTimeoutMS: 60000,
@@ -300,109 +179,27 @@ app.get('/api/test', (req, res) => {
     res.json({ status: 'ok', mongodb_status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected', message: 'API is working!' });
 });
 
-// ====================== تسجيل الدخول ======================
-app.post('/api/login', loginLimiter, async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const clientIP = req.ip || req.connection.remoteAddress;
-        
-        if (!username || !password) {
-            return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
-        }
-
-        let user = await Admin.findOne({ username: username.toLowerCase() });
-        let userType = 'admin';
-
-        if (!user) {
-            user = await Student.findOne({ username: username.toLowerCase() });
-            userType = 'student';
-        }
-
-        if (!user) {
-            return res.status(401).json({ error: 'بيانات غير صحيحة' });
-        }
-
-        if (user.lockedUntil && user.lockedUntil > new Date()) {
-            const remainingMinutes = Math.ceil((user.lockedUntil - new Date()) / 60000);
-            return res.status(401).json({ error: `الحساب مقفل مؤقتاً. حاول مرة أخرى بعد ${remainingMinutes} دقيقة` });
-        }
-
-        const isMatch = await verifyPassword(password, user.password);
-        
-        if (!isMatch) {
-            user.failedAttempts = (user.failedAttempts || 0) + 1;
-            if (user.failedAttempts >= 5) {
-                user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
-            }
-            await user.save();
-            return res.status(401).json({ error: 'بيانات غير صحيحة' });
-        }
-
-        user.failedAttempts = 0;
-        user.lockedUntil = null;
-        user.lastLogin = new Date();
-        user.lastIP = clientIP;
-        await user.save();
-
-        const token = jwt.sign(
-            { id: user._id, username: user.username, type: userType },
-            JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        const csrfToken = crypto.randomBytes(32).toString('hex');
-        req.session.csrfToken = csrfToken;
-
-        res.json({
-            success: true,
-            token: token,
-            csrfToken: csrfToken,
-            user: {
-                username: user.username,
-                fullName: user.fullName,
-                type: userType,
-                ...(user.studentCode && { id: user.studentCode })
-            }
-        });
-
-    } catch (error) {
-        console.error('🔥 Login error:', error);
-        res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message });
-    }
-});
-
-// ====================== التحقق من الجلسة ======================
-app.get('/api/verify-session', verifyToken, async (req, res) => {
-    res.json({ valid: true, user: req.user });
-});
-
-// ====================== تسجيل الخروج ======================
-app.post('/api/logout', verifyToken, async (req, res) => {
-    req.session.destroy();
-    res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
-});
-
 // ====================== الأدمنز ======================
-app.get('/api/admins', verifyToken, isAdmin, async (req, res) => {
+app.get('/api/admins', async (req, res) => {
     try {
         const admins = await Admin.find().select('-password');
         res.json(admins);
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب الأدمنز' }); }
 });
 
-app.post('/api/admins', verifyToken, isAdmin, async (req, res) => {
+app.post('/api/admins', async (req, res) => {
     try {
         const { fullName, username, password } = req.body;
         const existingAdmin = await Admin.findOne({ username });
         if (existingAdmin) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
-        const hashedPassword = await hashPassword(password);
+        const hashedPassword = hashPassword(password);
         const newAdmin = new Admin({ fullName, username, password: hashedPassword });
         await newAdmin.save();
         res.json({ message: 'تم إضافة الأدمن', admin: { fullName, username } });
     } catch (error) { res.status(500).json({ error: 'خطأ في إضافة الأدمن' }); }
 });
 
-app.delete('/api/admins/:username', verifyToken, isAdmin, async (req, res) => {
+app.delete('/api/admins/:username', async (req, res) => {
     try {
         const admins = await Admin.find();
         if (admins.length <= 1) return res.status(400).json({ error: 'لا يمكن حذف آخر أدمن' });
@@ -412,14 +209,14 @@ app.delete('/api/admins/:username', verifyToken, isAdmin, async (req, res) => {
 });
 
 // ====================== الطلاب ======================
-app.get('/api/students', verifyToken, isAdmin, async (req, res) => {
+app.get('/api/students', async (req, res) => {
     try {
         const students = await Student.find().select('-password');
         res.json(students);
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب الطلاب' }); }
 });
 
-app.get('/api/students/by-grade/:grade', verifyToken, isAdmin, async (req, res) => {
+app.get('/api/students/by-grade/:grade', async (req, res) => {
     try {
         const { grade } = req.params;
         const students = await Student.find({ grade }).select('-password');
@@ -427,14 +224,14 @@ app.get('/api/students/by-grade/:grade', verifyToken, isAdmin, async (req, res) 
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب الطلاب حسب الصف' }); }
 });
 
-app.post('/api/students', verifyToken, isAdmin, async (req, res) => {
+app.post('/api/students', async (req, res) => {
     try {
         const { fullName, id, subjects, semester } = req.body;
         const existingAdmins = await Admin.find();
         const existingStudents = await Student.find();
         const username = generateUniqueUsername(fullName, id, [...existingAdmins, ...existingStudents]);
         const originalPassword = generatePassword(fullName);
-        const hashedPassword = await hashPassword(originalPassword);
+        const hashedPassword = hashPassword(originalPassword);
         
         const newStudent = new Student({
             fullName, studentCode: id, username, password: hashedPassword,
@@ -446,7 +243,7 @@ app.post('/api/students', verifyToken, isAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في إضافة الطالب' }); }
 });
 
-app.put('/api/students/:studentCode', verifyToken, isAdmin, async (req, res) => {
+app.put('/api/students/:studentCode', async (req, res) => {
     try {
         const { fullName, username, studentCode, password, profile, subjects, semester } = req.body;
         const updateData = {};
@@ -456,7 +253,7 @@ app.put('/api/students/:studentCode', verifyToken, isAdmin, async (req, res) => 
         if (profile !== undefined) updateData.profile = profile;
         if (subjects !== undefined) updateData.subjects = subjects;
         if (semester !== undefined) updateData.semester = semester;
-        if (password && password !== '********') updateData.password = await hashPassword(password);
+        if (password && password !== '********') updateData.password = hashPassword(password);
         
         const updated = await Student.findOneAndUpdate({ studentCode: req.params.studentCode }, updateData, { new: true });
         if (!updated) return res.status(404).json({ error: 'الطالب غير موجود' });
@@ -466,13 +263,45 @@ app.put('/api/students/:studentCode', verifyToken, isAdmin, async (req, res) => 
     } catch (error) { res.status(500).json({ error: 'فشل في التحديث: ' + error.message }); }
 });
 
-app.delete('/api/students/:studentCode', verifyToken, isAdmin, async (req, res) => {
+app.delete('/api/students/:studentCode', async (req, res) => {
     try {
         const student = await Student.findOneAndDelete({ studentCode: req.params.studentCode });
         if (!student) return res.status(404).json({ error: 'الطالب غير موجود' });
         await Violation.deleteMany({ studentId: req.params.studentCode });
         res.json({ message: 'تم حذف الطالب' });
     } catch (error) { res.status(500).json({ error: 'خطأ في حذف الطالب' }); }
+});
+
+// ====================== تسجيل الدخول ======================
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+
+        let user = await Admin.findOne({ username: username.toLowerCase() });
+        let userType = 'admin';
+
+        if (!user) {
+            user = await Student.findOne({ username: username.toLowerCase() });
+            userType = 'student';
+        }
+
+        if (!user) return res.status(401).json({ error: 'بيانات غير صحيحة' });
+
+        const hashedInputPassword = hashPassword(password);
+        const isMatch = (hashedInputPassword === user.password);
+        if (!isMatch) return res.status(401).json({ error: 'بيانات غير صحيحة' });
+
+        res.json({
+            success: true,
+            user: {
+                username: user.username,
+                fullName: user.fullName,
+                type: userType,
+                ...(user.studentCode && { id: user.studentCode })
+            }
+        });
+    } catch (error) { res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message }); }
 });
 
 // ====================== تسجيل طالب جديد ======================
@@ -484,7 +313,7 @@ app.post('/api/register-student', async (req, res) => {
         const existingUser = await Student.findOne({ $or: [{ username }, { studentCode }] });
         if (existingUser) return res.status(400).json({ error: 'المستخدم أو الكود موجود مسبقاً' });
 
-        const hashedPassword = await hashPassword(password);
+        const hashedPassword = hashPassword(password);
         const student = new Student({
             fullName, username: username.toLowerCase(), studentCode,
             grade: grade || 'first', password: hashedPassword,
@@ -508,37 +337,24 @@ app.post('/api/check-username', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في التحقق من اسم المستخدم' }); }
 });
 
-// ====================== إنشاء مدير تجريبي ======================
-app.post('/api/create-test-admin', async (req, res) => {
-    try {
-        const existingAdmin = await Admin.findOne({ username: 'admin' });
-        if (existingAdmin) return res.json({ message: 'المدير موجود مسبقاً', username: 'admin', password: 'admin123' });
-        const hashedPassword = await hashPassword('admin123');
-        const admin = new Admin({ fullName: 'مدير النظام', username: 'admin', password: hashedPassword });
-        await admin.save();
-        res.json({ message: 'تم إنشاء المدير بنجاح', username: 'admin', password: 'admin123' });
-    } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
 // ====================== المخالفات والإشعارات ======================
-app.get('/api/violations', verifyToken, isAdmin, async (req, res) => { try { res.json(await Violation.find()); } catch (error) { res.status(500).json({ error: 'خطأ في جلب المخالفات' }); } });
-app.post('/api/violations', verifyToken, isAdmin, async (req, res) => { try { const newViolation = new Violation(req.body); await newViolation.save(); res.json({ message: 'تم إضافة المخالفة', violation: newViolation }); } catch (error) { res.status(500).json({ error: 'خطأ في إضافة المخالفة' }); } });
-app.put('/api/violations/:id', verifyToken, isAdmin, async (req, res) => { try { const updated = await Violation.findByIdAndUpdate(req.params.id, req.body, { new: true }); res.json(updated); } catch (error) { res.status(500).json({ error: error.message }); } });
-app.delete('/api/violations/:id', verifyToken, isAdmin, async (req, res) => { try { await Violation.findByIdAndDelete(req.params.id); res.json({ message: 'تم حذف المخالفة' }); } catch (error) { res.status(500).json({ error: 'خطأ في حذف المخالفة' }); } });
+app.get('/api/violations', async (req, res) => { try { res.json(await Violation.find()); } catch (error) { res.status(500).json({ error: 'خطأ في جلب المخالفات' }); } });
+app.post('/api/violations', async (req, res) => { try { const newViolation = new Violation(req.body); await newViolation.save(); res.json({ message: 'تم إضافة المخالفة', violation: newViolation }); } catch (error) { res.status(500).json({ error: 'خطأ في إضافة المخالفة' }); } });
+app.delete('/api/violations/:id', async (req, res) => { try { await Violation.findByIdAndDelete(req.params.id); res.json({ message: 'تم حذف المخالفة' }); } catch (error) { res.status(500).json({ error: 'خطأ في حذف المخالفة' }); } });
 
 app.get('/api/notifications', async (req, res) => { try { res.json(await Notification.find()); } catch (error) { res.status(500).json({ error: 'خطأ في جلب الإشعارات' }); } });
-app.post('/api/notifications', verifyToken, isAdmin, async (req, res) => { try { const newNotification = new Notification(req.body); await newNotification.save(); res.json({ message: 'تم إضافة الإشعار', notification: newNotification }); } catch (error) { res.status(500).json({ error: 'خطأ في إضافة الإشعار' }); } });
-app.delete('/api/notifications/:id', verifyToken, isAdmin, async (req, res) => { try { await Notification.findByIdAndDelete(req.params.id); res.json({ message: 'تم حذف الإشعار' }); } catch (error) { res.status(500).json({ error: 'خطأ في حذف الإشعار' }); } });
+app.post('/api/notifications', async (req, res) => { try { const newNotification = new Notification(req.body); await newNotification.save(); res.json({ message: 'تم إضافة الإشعار', notification: newNotification }); } catch (error) { res.status(500).json({ error: 'خطأ في إضافة الإشعار' }); } });
+app.delete('/api/notifications/:id', async (req, res) => { try { await Notification.findByIdAndDelete(req.params.id); res.json({ message: 'تم حذف الإشعار' }); } catch (error) { res.status(500).json({ error: 'خطأ في حذف الإشعار' }); } });
 
-// ====================== الاختبارات ======================
+// ====================== الاختبارات (Exams) ======================
 app.post('/api/exams/check-code', async (req, res) => { try { const { code } = req.body; const exam = await Exam.findOne({ code }); res.json({ available: !exam }); } catch (error) { res.status(500).json({ error: 'فشل في التحقق من الكود' }); } });
-app.post('/api/exams', verifyToken, isAdmin, async (req, res) => { try { const exam = new Exam(req.body); await exam.save(); res.json({ message: 'تم حفظ الاختبار', code: req.body.code }); } catch (error) { res.status(500).json({ error: 'فشل في حفظ الاختبار' }); } });
+app.post('/api/exams', async (req, res) => { try { const exam = new Exam(req.body); await exam.save(); res.json({ message: 'تم حفظ الاختبار', code: req.body.code }); } catch (error) { res.status(500).json({ error: 'فشل في حفظ الاختبار' }); } });
 app.get('/api/exams/:code', async (req, res) => { try { const exam = await Exam.findOne({ code: req.params.code }); if (!exam) return res.status(404).json({ error: 'الاختبار غير موجود' }); res.json(exam); } catch (error) { res.status(500).json({ error: 'فشل في جلب الاختبار' }); } });
-app.post('/api/exams/submit', verifyToken, async (req, res) => { try { const result = new ExamResult(req.body); await result.save(); res.json({ message: 'تم حفظ النتيجة' }); } catch (error) { res.status(500).json({ error: 'فشل في إرسال النتيجة' }); } });
-app.get('/api/exams/:code/results', verifyToken, async (req, res) => { try { const results = await ExamResult.find({ examCode: req.params.code }); res.json(results); } catch (error) { res.status(500).json({ error: 'فشل في جلب نتائج الاختبار' }); } });
+app.post('/api/exams/submit', async (req, res) => { try { const result = new ExamResult(req.body); await result.save(); res.json({ message: 'تم حفظ النتيجة' }); } catch (error) { res.status(500).json({ error: 'فشل في إرسال النتيجة' }); } });
+app.get('/api/exams/:code/results', async (req, res) => { try { const results = await ExamResult.find({ examCode: req.params.code }); res.json(results); } catch (error) { res.status(500).json({ error: 'فشل في جلب نتائج الاختبار' }); } });
 
 // ====================== تحليل PDF ونور AI ======================
-app.post('/api/analyze-pdf', verifyToken, isAdmin, async (req, res) => {
+app.post('/api/analyze-pdf', async (req, res) => {
     try {
         const { pdfData } = req.body;
         if (!pdfData) return res.status(400).json({ error: 'بيانات PDF غير صالحة' });
@@ -564,18 +380,29 @@ app.post('/api/nour', async (req, res) => {
     } catch (err) { res.json({ reply: "النت وقع يا أسطورة… جرب تاني" }); }
 });
 
-// ====================== الحضور والغياب ======================
-app.get('/api/attendance/:date', verifyToken, isAdmin, async (req, res) => {
+// ====================== إنشاء مدير تجريبي ======================
+app.post('/api/create-test-admin', async (req, res) => {
+    try {
+        const existingAdmin = await Admin.findOne({ username: 'admin' });
+        if (existingAdmin) return res.json({ message: 'المدير موجود مسبقاً', username: 'admin', password: 'admin123' });
+        const admin = new Admin({ fullName: 'مدير النظام', username: 'admin', password: hashPassword('admin123') });
+        await admin.save();
+        res.json({ message: 'تم إنشاء المدير بنجاح', username: 'admin', password: 'admin123' });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// ====================== API Routes - الحضور والغياب ======================
+app.get('/api/attendance/:date', async (req, res) => {
     try { const attendance = await Attendance.find({ date: req.params.date }); res.json(attendance); }
     catch (error) { res.status(500).json({ error: 'خطأ في جلب بيانات الحضور' }); }
 });
 
-app.get('/api/attendance/student/:studentCode', verifyToken, async (req, res) => {
+app.get('/api/attendance/student/:studentCode', async (req, res) => {
     try { const attendance = await Attendance.find({ studentCode: req.params.studentCode }); res.json(attendance); }
     catch (error) { res.status(500).json({ error: 'خطأ في جلب حضور الطالب' }); }
 });
 
-app.post('/api/attendance', verifyToken, isAdmin, async (req, res) => {
+app.post('/api/attendance', async (req, res) => {
     try {
         const { studentCode, studentName, date, status, note, recordedBy } = req.body;
         const existing = await Attendance.findOne({ studentCode, date });
@@ -590,7 +417,7 @@ app.post('/api/attendance', verifyToken, isAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في تسجيل الحضور' }); }
 });
 
-app.post('/api/attendance/bulk', verifyToken, isAdmin, async (req, res) => {
+app.post('/api/attendance/bulk', async (req, res) => {
     try {
         const { date, students, recordedBy } = req.body;
         let saved = 0, updated = 0;
@@ -608,7 +435,7 @@ app.post('/api/attendance/bulk', verifyToken, isAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في تسجيل الحضور' }); }
 });
 
-app.get('/api/attendance/stats/:studentCode', verifyToken, async (req, res) => {
+app.get('/api/attendance/stats/:studentCode', async (req, res) => {
     try {
         const attendance = await Attendance.find({ studentCode: req.params.studentCode });
         const present = attendance.filter(a => a.status === 'present').length;
@@ -619,11 +446,13 @@ app.get('/api/attendance/stats/:studentCode', verifyToken, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'خطأ في جلب إحصائيات الحضور' }); }
 });
 
+
 // ====================== نظام الإشعارات Push ======================
 const webpush = require('web-push');
 
+// التحقق من وجود المفاتيح
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    console.error('❌ VAPID keys are missing!');
+    console.error('❌ VAPID keys are missing! Please add them to Environment Variables');
 } else {
     webpush.setVapidDetails(
         'mailto:info@aldabeia.edu.eg',
@@ -632,10 +461,13 @@ if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
     );
     console.log('✅ VAPID keys configured');
 }
-
+// نموذج تخزين الاشتراكات
 const subscriptionSchema = new mongoose.Schema({
     endpoint: { type: String, required: true, unique: true },
-    keys: { p256dh: String, auth: String },
+    keys: {
+        p256dh: String,
+        auth: String
+    },
     userId: String,
     userType: String,
     createdAt: { type: Date, default: Date.now }
@@ -643,47 +475,99 @@ const subscriptionSchema = new mongoose.Schema({
 
 const Subscription = mongoose.models.Subscription || mongoose.model('Subscription', subscriptionSchema);
 
-app.post('/api/notifications/subscribe', verifyToken, async (req, res) => {
+// تسجيل اشتراك جديد
+app.post('/api/notifications/subscribe', async (req, res) => {
     try {
         const { subscription, userId, userType } = req.body;
+        
         const existing = await Subscription.findOne({ endpoint: subscription.endpoint });
-        if (existing) return res.json({ message: 'Subscription already exists' });
-        const newSubscription = new Subscription({ endpoint: subscription.endpoint, keys: subscription.keys, userId, userType });
+        if (existing) {
+            return res.json({ message: 'Subscription already exists' });
+        }
+        
+        const newSubscription = new Subscription({
+            endpoint: subscription.endpoint,
+            keys: subscription.keys,
+            userId: userId,
+            userType: userType
+        });
+        
         await newSubscription.save();
-        res.json({ success: true });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+        res.json({ success: true, message: 'Subscribed successfully' });
+    } catch (error) {
+        console.error('Error saving subscription:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.post('/api/notifications/send-all', verifyToken, isAdmin, async (req, res) => {
+// إلغاء الاشتراك
+app.post('/api/notifications/unsubscribe', async (req, res) => {
+    try {
+        const { endpoint } = req.body;
+        await Subscription.deleteOne({ endpoint });
+        res.json({ success: true, message: 'Unsubscribed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// إرسال إشعار للجميع
+app.post('/api/notifications/send-all', async (req, res) => {
     try {
         const { title, body, url, userType } = req.body;
+        
         let query = {};
-        if (userType && userType !== 'all') query.userType = userType;
+        if (userType && userType !== 'all') {
+            query.userType = userType;
+        }
+        
         const subscriptions = await Subscription.find(query);
         let sent = 0, failed = 0;
+        
         for (const sub of subscriptions) {
-            const payload = JSON.stringify({ title: title || 'إشعار جديد', body: body || '', icon: '/logo.png', url: url || '/' });
+            const payload = JSON.stringify({
+                title: title || 'إشعار جديد',
+                body: body || '',
+                icon: '/logo.png',
+                url: url || '/'
+            });
+            
             try {
                 await webpush.sendNotification(sub, payload);
                 sent++;
             } catch (error) {
                 failed++;
-                if (error.statusCode === 410) await Subscription.deleteOne({ endpoint: sub.endpoint });
+                if (error.statusCode === 410) {
+                    await Subscription.deleteOne({ endpoint: sub.endpoint });
+                }
             }
         }
+        
         res.json({ success: true, sent, failed, total: subscriptions.length });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.get('/api/notifications/subscribers', verifyToken, isAdmin, async (req, res) => {
-    try { const count = await Subscription.countDocuments(); res.json({ count }); }
-    catch (error) { res.status(500).json({ error: error.message }); }
+// جلب عدد المشتركين
+app.get('/api/notifications/subscribers', async (req, res) => {
+    try {
+        const count = await Subscription.countDocuments();
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
+// جلب المفتاح العام
 app.get('/api/notifications/settings', async (req, res) => {
-    try { res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' }); }
-    catch (error) { res.status(500).json({ error: error.message }); }
+    try {
+        res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
+
 
 // ====================== Error Handling ======================
 app.use((err, req, res, next) => {
