@@ -1,4 +1,7 @@
 require('dotenv').config();
+// أضف السطرين دول
+const path = require('path');
+app.use(express.static(path.join(__dirname, '..', 'public')));
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✅ Found' : '❌ Not found');
 
 const express = require('express');
