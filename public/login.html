@@ -2,66 +2,132 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>تسجيل الدخول - معهد رعاية الضبعية</title>
     <link rel="stylesheet" href="login.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="icon" type="image/png" href="/logo.png">
 </head>
 <body>
     <header class="main-header">
         <img src="logo.png" alt="شعار معهد رعاية الضبعية" class="logo">
-        <h1>تسجيل الدخول</h1>
+        <h1>نظام إدارة المعهد</h1>
     </header>
 
     <div class="main-container">
         <div class="login-form-container">
-            <h2>أدخل بياناتك</h2>
+            <div class="login-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h2>تسجيل الدخول</h2>
+
+            <div id="message-container"></div>
+
             <form id="login-form">
                 <div class="input-group">
-                    <label for="username">اسم المستخدم</label>
+                    <label><i class="fas fa-user"></i> اسم المستخدم</label>
                     <input type="text" id="username" name="username" placeholder="أدخل اسم المستخدم" required>
                 </div>
-              <div class="input-group" style="position: relative;">
-    <label for="password">كلمة المرور</label>
-    <div style="position: relative;">
-        <input type="password" id="password" name="password" placeholder="أدخل كلمة المرور" required style="padding-left: 40px;">
-        <i class="fas fa-eye" id="togglePassword" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
-    </div>
-</div>
-                <button type="submit" class="submit-btn">تسجيل الدخول</button>
-            </form>
-            
-            <p style="text-align: center; margin-top: 15px; color: #94a3b8; font-size: 1rem;">
-                <span style="color: #000000;">ليس لديك حساب؟</span> 
-                <a href="signup.html" style="color: #1e40af; font-weight: bold;">إنشاء حساب</a>
-            </p>
 
-            <p style="text-align: center; margin-top: 15px; color: #94a3b8; font-size: 1rem;">
-                <span style="color: #000000;">ولي أمر؟</span> 
-                <a href="parent-login.html" style="color: #1e40af; font-weight: bold;">تسجيل دخول ولي الأمر</a>
-            </p>
+                <div class="input-group">
+                    <label><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="password" name="password" placeholder="أدخل كلمة المرور" required>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                </button>
+
+                <div class="signup-link">
+                    ليس لديك حساب؟ <a href="signup.html"><i class="fas fa-user-plus"></i> إنشاء حساب جديد</a>
+                </div>
+
+                <div class="parent-link">
+                    <a href="parent-login.html"><i class="fas fa-user-friends"></i> تسجيل دخول ولي الأمر</a>
+                </div>
+            </form>
         </div>
     </div>
 
     <footer>
-        <p>Developed by Ahmed Mousa <span class="heart">❤</span></p>
+        <p>Developed by Ahmed Moussa <span class="heart">❤</span></p>
     </footer>
 
-    <script src="auth.js" defer></script>
-    <script>
-    // إظهار/إخفاء كلمة المرور
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    
-    if (togglePassword && passwordInput) {
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
+    <script src="auth.js"></script>
+    <!-- حماية الصفحة -->
+<script>
+    // منع فتح Console
+    (function() {
+        // منع F12
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+                (e.ctrlKey && e.key === 'U') ||
+                (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'C'))) {
+                e.preventDefault();
+                return false;
+            }
         });
-    }
+
+        // منع النقر بزر الماوس الأيمن
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // منع اختصار Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+                e.preventDefault();
+                return false;
+            }
+            // منع Ctrl+U (عرض المصدر)
+            if (e.ctrlKey && e.keyCode === 85) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // تشويش على console.log
+        if (typeof console !== 'undefined') {
+            console.log = function() {};
+            console.warn = function() {};
+            console.error = function() {};
+            console.info = function() {};
+            console.debug = function() {};
+        }
+
+        // منع فتح DevTools عن طريق الكشف
+        setInterval(function() {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            if (end - start > 100) {
+                document.body.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:white;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:Tajawal,monospace;"><i class="fas fa-shield-alt" style="font-size:80px;color:#d4af37;margin-bottom:20px;"></i><h2 style="color:#1a4f6e;">تم تعطيل أدوات المطور</h2><p style="color:#64748b;">يرجى إغلاق أدوات المطور لإكمال العملية</p></div>';
+                document.body.style.overflow = 'hidden';
+            }
+        }, 1000);
+
+        // منع حفظ الصفحة (Ctrl+S)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.keyCode === 83) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // منع dragging الصور
+        document.querySelectorAll('img').forEach(img => {
+            img.setAttribute('draggable', 'false');
+            img.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+                return false;
+            });
+        });
+    })();
 </script>
 </body>
 </html>
