@@ -1,12 +1,12 @@
 // ====================== إعدادات السيرفر ======================
 // تحديد رابط السيرفر بناءً على بيئة التشغيل
 const BASE_URL = (() => {
-    // إذا كنت تعمل محلياً
+    // لو انت فاتح الموقع على جهازك (localhost)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://localhost:3000';
+        return 'http://localhost:3000';  // يروح للسيرفر المحلي
     }
-    // إذا كنت تعمل على Vercel أو أي استضافة أخرى
-    return '';
+    // لو انت فاتح الموقع على Vercel أو أي استضافة تانية
+    return '';  // يروح لنفس السيرفر (المسارات النسبية)
 })();
 
 console.log('🔌 BASE_URL:', BASE_URL || 'نفس السيرفر (relative path)');
