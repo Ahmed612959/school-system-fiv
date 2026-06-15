@@ -1,22 +1,25 @@
 {
-  "name": "school-system-api",
-  "version": "1.0.0",
+  "name": "schoolx",
+  "version": "2.0.0",
+  "description": "School System API",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.0",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "jsonwebtoken": "^9.0.0",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "multer": "^1.4.5-lts.1",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
     "cookie-parser": "^1.4.6",
-    "express-session": "^1.17.3",
-    "connect-mongo": "^5.1.0",
-    "helmet": "^7.0.0",
-    "express-rate-limit": "^6.7.0",
-    "pdf-parse": "^1.1.1"
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
